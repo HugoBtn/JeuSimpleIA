@@ -18,6 +18,9 @@ class Dice:
     def __str__(self):
         return f"La valeur du dé est {str(self.__value)}"
 
+    def __repr__(self):
+        return f"Dé({self.__color}, {self.__value})"
+
 
 if __name__ == "__main__":
     Dice1 = Dice()
