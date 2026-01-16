@@ -1,14 +1,18 @@
 import random
 
 
-class De:
-    def __init__(self):
+class Dice:
+    def __init__(self, color="white"):
+        self.__color = color
         self.__value = random.randint(1, 6)
     
     def get_value(self):
         return self.__value.copy()
-    
-    def lancer(self):
+
+    def get_color(self):
+        return self.__color
+
+    def throw(self):
         self.__value = random.randint(1, 6)
 
     def __str__(self):
@@ -16,10 +20,10 @@ class De:
 
 
 if __name__ == "__main__":
-    De1 = De()
-    De2 = De()
-    print(De1)
-    print(De2)
-    De1.lancer()
-    print(De1)
-    print(De2)
+    Dice1 = Dice()
+    Dice2 = Dice()
+    print(Dice1)
+    print(Dice2)
+    Dice1.throw()
+    print(Dice1)
+    print(Dice2)
