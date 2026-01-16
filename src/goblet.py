@@ -1,6 +1,6 @@
 from dice import Dice
 
-class Gobelet:
+class Goblet:
     def __init__(self, color, capacity):
         self.__color = color
         self.__size = capacity
@@ -26,9 +26,9 @@ class Gobelet:
 
 
 if __name__ == "__main__":
-    Gobelet1 = Gobelet("red", 3)
+    Goblet1 = Goblet("red", 3)
     Dice1 = Dice("blue")
     Dice2 = Dice("green")
-    Gobelet1.add_dice(Dice1)
-    Gobelet1.add_dice(Dice2)
-    print(Gobelet1)
+    Goblet1.add_dice(Dice1)
+    Goblet1.add_dice(Dice2)
+    print(Goblet1)
