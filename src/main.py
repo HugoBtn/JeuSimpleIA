@@ -1,15 +1,18 @@
 from goblet import Goblet
 from dice import Dice
+from player import Player
 
 def main():
-    goblet = Goblet("blue", 5)
-    dice1 = Dice("red")
-    dice2 = Dice("green")
-    
-    goblet.add_dice(dice1)
-    goblet.add_dice(dice2)
-    
-    print(goblet)
+    player = Player("Alice", "purple")
+
+    print("Before playing:")
+    print(player)
+
+    # Player plays (shakes the goblet)
+    player.play()
+
+    print("After playing:")
+    print(player)
 
 if __name__ == "__main__":
     main()

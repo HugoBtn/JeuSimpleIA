@@ -1,10 +1,10 @@
 from dice import Dice
 
 class Goblet:
-    def __init__(self, color, capacity):
+    def __init__(self, color, capacity = 5):
         self.__color = color
         self.__size = capacity
-        self.__content = []
+        self.__content = [Dice(color) for _ in range(capacity)]
     
     def get_color(self):
         return self.__color
@@ -20,7 +20,13 @@ class Goblet:
             self.__content.append(dice)
         else:
             print("Le gobelet est plein.")
+    
+    def shake(self):
+        for dice in self.__content:
+            dice.roll()
 
     def __str__(self):
         return f"Gobelet de couleur {self.__color} avec une capacité de {self.__size} dés et contenant {self.__content}."
     
+    def __repr__(self):
+        return self.__str__()
