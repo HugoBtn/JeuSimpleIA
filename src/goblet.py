@@ -23,12 +23,4 @@ class Goblet:
 
     def __str__(self):
         return f"Gobelet de couleur {self.__color} avec une capacité de {self.__size} dés et contenant {self.__content}."
-
-
-if __name__ == "__main__":
-    Goblet1 = Goblet("red", 3)
-    Dice1 = Dice("blue")
-    Dice2 = Dice("green")
-    Goblet1.add_dice(Dice1)
-    Goblet1.add_dice(Dice2)
-    print(Goblet1)
+    
