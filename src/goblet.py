@@ -26,7 +26,7 @@ class Goblet:
             dice.roll()
 
     def __str__(self):
-        return f"Gobelet de couleur {self.__color} avec une capacité de {self.__size} dés et contenant {self.__content}."
+        return f"{self.__content}"
     
     def __repr__(self):
         return self.__str__()

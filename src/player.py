@@ -19,7 +19,7 @@ class Player:
         self.bet = (amount, value)
 
     def __str__(self):
-        return f'Player {self.__name}: Color={self.__color}, Goblet={self.__goblet}'
+        return f'Player {self.__name}: Goblet={self.__goblet}'
     
     def __repr__(self):
         return self.__str__()
