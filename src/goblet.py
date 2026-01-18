@@ -30,3 +30,6 @@ class Goblet:
     
     def __repr__(self):
         return self.__str__()
+    
+    def __len__(self):
+        return len(self.__content)
