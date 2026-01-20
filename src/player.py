@@ -13,13 +13,19 @@ class Player:
     def get_goblet_length(self):
         return len(self.__goblet)
     
+    def get_goblet(self):
+        return self.__goblet
+    
     def make_bet(self):
-        amount = int(input(f"{self.__name}, enter your bet amount: "))
-        value = int(input(f"{self.__name}, enter your bet value: "))
-        self.bet = (amount, value)
+        bet = input(f"{self.__name}, enter your bet (dodo or (amount, value)): ")
+        if "dodo" in bet.lower():
+            self.bet = "dodo"
+        else:
+            amount, value = map(int, bet.strip("()").split(","))
+            self.bet = (amount, value)
 
     def __str__(self):
-        return f'Player {self.__name}: Goblet={self.__goblet}'
+        return f'Player {self.__name}: Goblet={str(self.__goblet)}'
     
     def __repr__(self):
         return self.__str__()

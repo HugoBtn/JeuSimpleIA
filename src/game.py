@@ -5,6 +5,7 @@ class Game:
         self.__players = players
         self.__current_betting_player_index = 0
         self.__current_bet = None
+        self.__dodo = False
     
 
     def is_bet_valid(self, bet):
@@ -12,6 +13,8 @@ class Game:
             return True
         palepico = any(p.get_goblet_length() == 1 for p in self.__players) # pas bon mais revoir plus tard
         current = self.__current_bet
+        if bet == "dodo":
+            return True
         amount, value = bet
 
         if value < 1 or value > 6:
@@ -47,25 +50,44 @@ class Game:
         
         else:
             return False
-    
-    def next_turn(self):
-        print("Rolling dice for all players...")
-        for player in self.__players:
-            player.play()
-        print("Rolling dice for all players...")
-        while self.__current_betting_player_index < len(self.__players):
-            player = self.__players[self.__current_betting_player_index]
-            print(f"It's {player}'s turn to bet.")
-            player.make_bet()
-            bet = player.bet
-            if self.is_bet_valid(bet):
-                self.__current_bet = bet
-                print(f"Bet accepted: {bet}")
-                self.__current_betting_player_index = self.__current_betting_player_index + 1
-        print("Betting round over.")
+
+    def game_loop(self):
+        while True:
+            print("Rolling dice for all players...")
+            for player in self.__players:
+                player.play()
+            while not self.__dodo:
+                player = self.__players[self.__current_betting_player_index]
+                print(f"It's {player}'s turn to bet.")
+                player.make_bet()
+                bet = player.bet
+                if self.is_bet_valid(bet):
+                    if bet == "dodo":
+                        self.__dodo = True
+                        print(f"{player} has called dodo!")
+                    else:
+                        self.__current_bet = bet
+                        print(f"Bet accepted: {bet}")
+                        self.__current_betting_player_index = (self.__current_betting_player_index + 1) % len(self.__players)
+            value = self.__current_bet[1]
+            count = 0
+            for p in self.__players:
+                count += p.get_goblet().count_value(value)
+
+            print(f"\nTotal count of dice with value {value}: {count}")
+            dodo = self.__players[self.__current_betting_player_index - 1 if self.__current_betting_player_index - 1 >= 0 else len(self.__players) - 1]
+            print(f"The bet was {dodo.bet}.\n")
+
+            if count < dodo.bet[0]:
+                print(f"{dodo} loses the round!")
+                self.__current_betting_player_index = self.__current_betting_player_index - 1 if self.__current_betting_player_index - 1 >= 0 else len(self.__players) - 1
+                self.__dodo = False
+            else:
+                print(f"{self.__players[self.__current_betting_player_index]} loses the round!")
+                self.__dodo = False
     
 
 if __name__ == "__main__":
     players = [Player("Alice", "purple"), Player("Bob", "red")]
     game = Game(players)
-    game.next_turn()
+    game.game_loop()

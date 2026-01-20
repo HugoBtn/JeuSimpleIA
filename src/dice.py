@@ -7,7 +7,7 @@ class Dice:
         self.__value = randint(1, 6)
     
     def get_value(self):
-        return self.__value.copy()
+        return self.__value
 
     def get_color(self):
         return self.__color

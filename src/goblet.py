@@ -24,12 +24,15 @@ class Goblet:
     def shake(self):
         for dice in self.__content:
             dice.roll()
+    
+    def count_value(self, value):
+        return sum(1 for dice in self.__content if dice.get_value() == value)
 
     def __str__(self):
         return f"{self.__content}"
     
     def __repr__(self):
-        return self.__str__()
+        return self.__content
     
     def __len__(self):
         return len(self.__content)
