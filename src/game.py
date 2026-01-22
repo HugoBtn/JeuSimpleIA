@@ -80,10 +80,12 @@ class Game:
 
             if count < dodo.bet[0]:
                 print(f"{dodo} loses the round!")
+                dodo.lost()
                 self.__current_betting_player_index = self.__current_betting_player_index - 1 if self.__current_betting_player_index - 1 >= 0 else len(self.__players) - 1
                 self.__dodo = False
             else:
                 print(f"{self.__players[self.__current_betting_player_index]} loses the round!")
+                self.__players[self.__current_betting_player_index].lost()
                 self.__dodo = False
     
 

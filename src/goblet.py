@@ -21,6 +21,12 @@ class Goblet:
         else:
             print("Le gobelet est plein.")
     
+    def remove_die(self):
+        if len(self.__content) > 0:
+            self.__content.pop()
+        else:
+            print("Le gobelet est vide.")
+    
     def shake(self):
         for dice in self.__content:
             dice.roll()
