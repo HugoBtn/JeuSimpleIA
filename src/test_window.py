@@ -20,12 +20,12 @@ class FirstWindow(QMainWindow):
         widget_central.setLayout(layout)
 
         # Add a text
-        texte = QLabel("Bienvenue dans Perudo")
+        texte = QLabel("Welcome to Perudo")
         layout.addWidget(texte)
 
         # Add a button
-        bouton = QPushButton("Cliquez-moi")
-        bouton.clicked.connect(self.when_we_click()) # we connect the button to a method
+        bouton = QPushButton("Click me")
+        bouton.clicked.connect(self.when_we_click) # we connect the button to a method
         layout.addWidget(bouton)
 
     def when_we_click(self):
