@@ -1,48 +1,48 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
 import sys
 
-class PremiereFenetre(QMainWindow):
+class FirstWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Titre de la fenêtre
+        # Title of the window
         self.setWindowTitle("Perudo")
 
-        # Taille de la fenêtre
+        # Size of the window
         self.resize(400,300)
 
-        # Crée un widget central
+        # Create a central widget
         widget_central = QWidget()
         self.setCentralWidget(widget_central)
 
-        # Crée un layout
+        # Create a layout
         layout = QVBoxLayout()
         widget_central.setLayout(layout)
 
-        # Ajoute un texte
+        # Add a text
         texte = QLabel("Bienvenue dans Perudo")
         layout.addWidget(texte)
 
-        # Ajoute un bouton
+        # Add a button
         bouton = QPushButton("Cliquez-moi")
-        bouton.clicked.connect(self.quand_on_clique) # on connecte le bouton à une méthode
+        bouton.clicked.connect(self.when_we_click()) # we connect the button to a method
         layout.addWidget(bouton)
 
-    def quand_on_clique(self):
-        "Fonction qui s'exécute quand on clique le bouton"
-        print("Vous avez cliqué")
+    def when_we_click(self):
+        "Function that is executed when the button is clicked"
+        print("You clicked")
 
 
-# Point d'entrée dy programme
+# Entry point of the program
 if __name__ == "__main__":
-    # Créer l'application
+    # Create the application
     app = QApplication(sys.argv)
 
-    # Créer la fenêtre
-    fenetre = PremiereFenetre()
+    #  Create the window
+    fenetre = FirstWindow()
 
-    # Afficher la fenêtre
+    # Show the window
     fenetre.show()
 
-    # Lancer l'application (boucle infinie jusqu'à fermeture)
+    # Launch the application (infinite loop until closed)
     sys.exit(app.exec())
