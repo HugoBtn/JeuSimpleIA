@@ -10,7 +10,7 @@ class GameWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Perudo")
+        self.setWindowTitle("Perudo - Dice Game")
         self.resize(800, 500)
 
         # Create players
@@ -23,6 +23,7 @@ class GameWindow(QMainWindow):
 
         # Central widget
         central_widget = QWidget()
+        central_widget.setStyleSheet("background-color: #2C3E50;")
         self.setCentralWidget(central_widget)
 
         # Main vertical layout
@@ -46,13 +47,13 @@ class GameWindow(QMainWindow):
         # Buttons
         buttons_layout = QHBoxLayout()
 
-        btn_roll = QPushButton(" Roll dice")
-        btn_roll.setStyleSheet("font-size: 14px; padding: 8px;")
+        btn_roll = QPushButton("Roll dice")
+        btn_roll.setStyleSheet("font-size: 14px; padding: 8px; background-color: #E74C3C; color: #ECF0F1;font-weight: bold;")
         btn_roll.clicked.connect(self.roll_dice)
         buttons_layout.addWidget(btn_roll)
 
-        btn_next = QPushButton(" Next player")
-        btn_next.setStyleSheet("font-size: 14px; padding: 8px;")
+        btn_next = QPushButton("Next player")
+        btn_next.setStyleSheet("font-size: 14px; padding: 8px; background-color: #3498DB; color: #ECF0F1;font-weight: bold;")
         btn_next.clicked.connect(self.next_player)
         buttons_layout.addWidget(btn_next)
 
@@ -61,7 +62,7 @@ class GameWindow(QMainWindow):
         # Info zone
         self.info_label = QLabel("Click 'Roll dice' to start")
         self.info_label.setAlignment(Qt.AlignCenter)
-        self.info_label.setStyleSheet("font-size: 14px; color: black ; margin: 10px;")
+        self.info_label.setStyleSheet("font-size: 14px; color: #666; margin: 10px;")
         main_layout.addWidget(self.info_label)
 
     def roll_dice(self):
@@ -74,7 +75,7 @@ class GameWindow(QMainWindow):
         self.player_zones[self.active_player].show_dice()
 
         name = self.players[self.active_player].get_name()
-        self.info_label.setText(f"{name} rolled the dice")
+        self.info_label.setText(f"{name} rolled the dice!")
 
     def next_player(self):
         """Move to next player"""
