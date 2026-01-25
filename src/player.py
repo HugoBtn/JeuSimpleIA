@@ -5,6 +5,15 @@ class Player:
         self.__name = name
         self.__color = color
         self.__goblet = Goblet(color)
+
+    def get_name(self):
+        return self.__name
+
+    def get_color(self):
+        return self.__color
+
+    def get_goblet(self):
+        return self.__goblet
     
     def play(self):
         self.__goblet.shake()
