@@ -62,7 +62,7 @@ class GameWindow(QMainWindow):
         # Info zone
         self.info_label = QLabel("Click 'Roll dice' to start")
         self.info_label.setAlignment(Qt.AlignCenter)
-        self.info_label.setStyleSheet("font-size: 14px; color: #666; margin: 10px;")
+        self.info_label.setStyleSheet("font-size: 14px; color: #ECF0F1; margin: 10px;")
         main_layout.addWidget(self.info_label)
 
     def roll_dice(self):
