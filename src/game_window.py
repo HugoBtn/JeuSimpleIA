@@ -19,7 +19,7 @@ class GameWindow(QMainWindow):
             Player("Player 2", "red"),
             Player("Player 3", "blue")
         ]
-        self.active_player = 0  # Index of active player
+        self.active_player = 0
 
         # Central widget
         central_widget = QWidget()
