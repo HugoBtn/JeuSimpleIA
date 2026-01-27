@@ -1,4 +1,5 @@
 from player import Player
+from bid import Bid
 
 class Game:
     def __init__(self, players : list[Player]):
@@ -15,37 +16,41 @@ class Game:
         current = self.__current_bet
         if bet == "dodo":
             return True
-        amount, value = bet
+        amount = bet.get_quantity()
+        value = bet.get_value()
 
         if value < 1 or value > 6:
             return False
         if amount < 1 :
             return False
-        
-        elif current[0] != 1 and value == 1 and not palepico:
-            if amount < current[0] // 2:
+
+        current_amount = current.get_quantity()
+        current_value = current.get_value()
+
+        if current_value != 1 and value == 1 and not palepico:
+            if amount < current_amount // 2:
                 return False
             else:
                 return True
         
-        elif current[1] == 1 and value != 1 and not palepico:
-            if amount < current[0] * 2 + 1:
+        elif current_value == 1 and value != 1 and not palepico:
+            if amount < current_amount * 2 + 1:
                 return False
             else:
                 return True
         
         elif palepico:
-            if value != current[1]:
+            if value != current_value:
                 return False
-            if amount <= current[0]:
+            if amount <= current_amount:
                 return False
             else:
                 return True
 
-        elif amount <= current[0] and value > current[1]:
+        elif amount <= current_amount and value > current_value:
             return True
         
-        elif amount > current[0] and value <= current[1]:
+        elif amount > current_amount and value <= current_value:
             return True
         
         else:
@@ -69,7 +74,7 @@ class Game:
                         self.__current_bet = bet
                         print(f"Bet accepted: {bet}")
                         self.__current_betting_player_index = (self.__current_betting_player_index + 1) % len(self.__players)
-            value = self.__current_bet[1]
+            value = self.__current_bet.get_value()
             count = 0
             for p in self.__players:
                 count += p.get_goblet().count_value(value)
@@ -78,7 +83,7 @@ class Game:
             dodo = self.__players[self.__current_betting_player_index - 1 if self.__current_betting_player_index - 1 >= 0 else len(self.__players) - 1]
             print(f"The bet was {dodo.bet}.\n")
 
-            if count < dodo.bet[0]:
+            if count < dodo.bet.get_quantity():
                 print(f"{dodo} loses the round!")
                 dodo.lost()
                 self.__current_betting_player_index = self.__current_betting_player_index - 1 if self.__current_betting_player_index - 1 >= 0 else len(self.__players) - 1

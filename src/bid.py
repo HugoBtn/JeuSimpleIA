@@ -27,7 +27,7 @@ class Bid:
             return False
 
     def __str__(self):
-        return f"Bid(quantity={self.__quantity}, value={self.__value})"
+        return f"Bid({self.__quantity}, {self.__value})"
 
     def __repr__(self):
         return self.__str__()
