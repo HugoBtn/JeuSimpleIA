@@ -21,12 +21,24 @@ class Goblet:
         else:
             print("Le gobelet est plein.")
     
+    def remove_die(self):
+        if len(self.__content) > 0:
+            self.__content.pop()
+        else:
+            print("Le gobelet est vide.")
+    
     def shake(self):
         for dice in self.__content:
             dice.roll()
+    
+    def count_value(self, value):
+        return sum(1 for dice in self.__content if dice.get_value() == value)
 
     def __str__(self):
-        return f"Gobelet de couleur {self.__color} avec une capacité de {self.__size} dés et contenant {self.__content}."
+        return f"{self.__content}"
     
     def __repr__(self):
-        return self.__str__()
+        return self.__content
+    
+    def __len__(self):
+        return len(self.__content)

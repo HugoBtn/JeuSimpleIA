@@ -7,7 +7,7 @@ class Dice:
         self.__value = randint(1, 6)
     
     def get_value(self):
-        return self.__value.copy()
+        return self.__value
 
     def get_color(self):
         return self.__color
@@ -19,7 +19,7 @@ class Dice:
         return f"La valeur du dé est {str(self.__value)}"
 
     def __repr__(self):
-        return f"Dé({self.__color}, {self.__value})"
+        return f"Dé({self.__value})"
 
 
 if __name__ == "__main__":
