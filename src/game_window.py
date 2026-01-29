@@ -37,11 +37,11 @@ class GameWindow(QMainWindow):
         root_layout = QHBoxLayout()
         central_widget.setLayout(root_layout)
 
-        # Left part
+        # Left part with dice
         left_widget = self._create_left_panel()
         root_layout.addWidget(left_widget, stretch=3)
 
-        # Right part
+        # Right part with action panel
         right_widget = self._create_right_panel()
         root_layout.addWidget(right_widget, stretch=1)
 
@@ -65,7 +65,33 @@ class GameWindow(QMainWindow):
             layout.addWidget(zone)
 
         # Buttons
-        self._add_control_buttons(layout)
+        buttons_layout = QHBoxLayout()
+
+        btn_roll = QPushButton(" Lancer les dés")
+        btn_roll.setStyleSheet("""
+                    font-size: 14px; 
+                    padding: 10px; 
+                    background-color: #E74C3C; 
+                    color: #ECF0F1; 
+                    font-weight: bold; 
+                    border-radius: 5px;
+                """)
+        btn_roll.clicked.connect(self.roll_dice)
+        buttons_layout.addWidget(btn_roll)
+
+        btn_next = QPushButton(" Joueur suivant")
+        btn_next.setStyleSheet("""
+                    font-size: 14px; 
+                    padding: 10px; 
+                    background-color: #3498DB; 
+                    color: #ECF0F1; 
+                    font-weight: bold; 
+                    border-radius: 5px;
+                """)
+        btn_next.clicked.connect(self.next_player)
+        buttons_layout.addWidget(btn_next)
+
+        layout.addLayout(buttons_layout)
 
         # Info label
         self.info_label = QLabel("Cliquez sur 'Lancer les dés' pour commencer")
@@ -81,36 +107,6 @@ class GameWindow(QMainWindow):
 
         return widget
 
-    def _add_control_buttons(self, parent_layout):
-        """Add control buttons"""
-        buttons_layout = QHBoxLayout()
-
-        btn_roll = QPushButton(" Lancer les dés")
-        btn_roll.setStyleSheet("""
-            font-size: 14px; 
-            padding: 10px; 
-            background-color: #E74C3C; 
-            color: #ECF0F1; 
-            font-weight: bold; 
-            border-radius: 5px;
-        """)
-        btn_roll.clicked.connect(self.roll_dice)
-        buttons_layout.addWidget(btn_roll)
-
-        btn_next = QPushButton(" Joueur suivant")
-        btn_next.setStyleSheet("""
-            font-size: 14px; 
-            padding: 10px; 
-            background-color: #3498DB; 
-            color: #ECF0F1; 
-            font-weight: bold; 
-            border-radius: 5px;
-        """)
-        btn_next.clicked.connect(self.next_player)
-        buttons_layout.addWidget(btn_next)
-
-        parent_layout.addLayout(buttons_layout)
-
     def _create_right_panel(self):
         """Create the right panel (action panel)"""
         widget = QWidget()
@@ -122,7 +118,7 @@ class GameWindow(QMainWindow):
         # Create action panel
         self.action_panel = ActionPanel(self.players[self.active_player])
 
-        # Connect buttons directly (no signals)
+        # Connect buttons directly
         self.action_panel.btn_valide.clicked.connect(self.on_bet_validated)
         self.action_panel.btn_dodo.clicked.connect(self.on_dodo)
         self.action_panel.btn_tout_pile.clicked.connect(self.on_tout_pile)
@@ -153,16 +149,12 @@ class GameWindow(QMainWindow):
         self.active_player = (self.active_player + 1) % len(self.players)
 
         # Update the action panel
-        self.update_action_panel()
+        current_player = self.players[self.active_player]
+        self.action_panel.set_player(current_player)
 
         # Update info
         name = self.players[self.active_player].get_name()
         self.info_label.setText(f"C'est au tour de {name}")
-
-    def update_action_panel(self):
-        """Update the action panel for the active player"""
-        current_player = self.players[self.active_player]
-        self.action_panel.set_player(current_player)
 
     def on_bet_validated(self):
         """Callback when bet is validated"""
