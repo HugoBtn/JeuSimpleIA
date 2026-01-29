@@ -15,7 +15,7 @@ class PlayerZone(QWidget):
 
         # Player name
         self.name_label = QLabel(f"{player.get_name()}")
-        self.name_label.setStyleSheet("font-size: 14px; font-weight: bold;color: #ECF0F1")
+        self.name_label.setStyleSheet("font-size: 14px; font-weight: bold;color: black")
         layout.addWidget(self.name_label)
 
         # Container for dice
@@ -34,7 +34,7 @@ class PlayerZone(QWidget):
         self.hide_dice()
 
         # Simple gray border
-        self.setStyleSheet("background-color: #34495E; padding: 10px;")
+        self.setStyleSheet("background-color: #D3D3D3 ; padding: 10px;")
 
     def hide_dice(self):
         """Hide dice values"""

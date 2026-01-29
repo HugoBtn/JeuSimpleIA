@@ -23,7 +23,7 @@ class GameWindow(QMainWindow):
 
         # Central widget
         central_widget = QWidget()
-        central_widget.setStyleSheet("background-color: #2C3E50;")
+        central_widget.setStyleSheet("background-color: white;")
         self.setCentralWidget(central_widget)
 
         # Main vertical layout
