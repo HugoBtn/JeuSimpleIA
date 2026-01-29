@@ -1,95 +1,112 @@
 from player import Player
+from table import Table
 
 class Game:
-    def __init__(self, players : list[Player]):
-        self.__players = players
-        self.__current_betting_player_index = 0
+    def __init__(self, players):
+        self.__table = Table(players)
         self.__current_bet = None
-        self.__dodo = False
-    
+        self.__action = None 
 
     def is_bet_valid(self, bet):
+        if bet in ["dodo", "pile"]:
+            return self.__current_bet is not None # Impossible au premier tour
+        
+        amount, value = bet
+        if not (1 <= value <= 6) or amount < 1:
+            return False
+            
         if self.__current_bet is None:
             return True
-        palepico = any(p.get_goblet_length() == 1 for p in self.__players) # pas bon mais revoir plus tard
-        current = self.__current_bet
-        if bet == "dodo":
-            return True
-        amount, value = bet
 
-        if value < 1 or value > 6:
-            return False
-        if amount < 1 :
-            return False
-        
-        elif current[0] != 1 and value == 1 and not palepico:
-            if amount < current[0] // 2:
-                return False
-            else:
-                return True
-        
-        elif current[1] == 1 and value != 1 and not palepico:
-            if amount < current[0] * 2 + 1:
-                return False
-            else:
-                return True
-        
-        elif palepico:
-            if value != current[1]:
-                return False
-            if amount <= current[0]:
-                return False
-            else:
-                return True
+        curr_amt, curr_val = self.__current_bet
+        palepico = self.__table.get_current_player().palepico()
 
-        elif amount <= current[0] and value > current[1]:
-            return True
-        
-        elif amount > current[0] and value <= current[1]:
-            return True
-        
+        if palepico:
+            # En Palepico, la valeur ne change pas, seule la quantité augmente
+            return value == curr_val and amount > curr_amt
+
+        # Passage aux As (1)
+        if curr_val != 1 and value == 1:
+            return amount >= (curr_amt + 1) // 2
+        # Sortie des As
+        elif curr_val == 1 and value != 1:
+            return amount >= (curr_amt * 2) + 1
+        # Enchère classique
         else:
-            return False
+            if value == curr_val:
+                return amount > curr_amt
+            return (value > curr_val and amount >= curr_amt) or amount > curr_amt
 
     def game_loop(self):
-        while True:
-            print("Rolling dice for all players...")
-            for player in self.__players:
-                player.play()
-            while not self.__dodo:
-                player = self.__players[self.__current_betting_player_index]
-                print(f"It's {player}'s turn to bet.")
+        while len(self.__table) > 1:
+            self.__current_bet = None
+            self.__action = None
+            
+            print("\n" + "═"*40)
+            print(" DÉBUT DE MANCHE - Les joueurs secouent leurs gobelets")
+            print("═"*40)
+            
+            for p in self.__table:
+                p.play()
+                # Aide visuelle pour le test (affiche les dés de chaque joueur)
+                print(f"(Secret) {p}: {p.get_goblet()}")
+
+            while self.__action not in ["dodo", "pile"]:
+                player = self.__table.get_current_player()
+                if self.__current_bet:
+                    print(f"\n📢 Enchère à battre : {self.__current_bet[0]} dés de face {self.__current_bet[1]}")
+                else:
+                    print("\n🆕 Première enchère de la manche.")
+
                 player.make_bet()
-                bet = player.bet
-                if self.is_bet_valid(bet):
-                    if bet == "dodo":
-                        self.__dodo = True
-                        print(f"{player} has called dodo!")
+                
+                if self.is_bet_valid(player.bet):
+                    if player.bet in ["dodo", "pile"]:
+                        self.__action = player.bet
                     else:
-                        self.__current_bet = bet
-                        print(f"Bet accepted: {bet}")
-                        self.__current_betting_player_index = (self.__current_betting_player_index + 1) % len(self.__players)
-            value = self.__current_bet[1]
-            count = 0
-            for p in self.__players:
-                count += p.get_goblet().count_value(value)
+                        self.__current_bet = player.bet
+                        print(f"✅ Mise acceptée : {self.__current_bet}")
+                        self.__table.next_player()
+                else:
+                    print("❌ Mise invalide ! (Rappel : on ne peut pas baisser l'enchère)")
 
-            print(f"\nTotal count of dice with value {value}: {count}")
-            dodo = self.__players[self.__current_betting_player_index - 1 if self.__current_betting_player_index - 1 >= 0 else len(self.__players) - 1]
-            print(f"The bet was {dodo.bet}.\n")
+            # Résolution de l'action (Dodo ou Pile)
+            caller = self.__table.get_current_player()
+            bidder = self.__table.get_previous_player()
+            target_amt, target_val = self.__current_bet
+            
+            # On utilise le mode Palepico si celui qui a misé (le bidder) est Palepico
+            is_palepico = bidder.palepico()
+            count = sum(p.get_goblet().count_value(target_val, is_palepico) for p in self.__table)
+            
+            print("\n" + "🔍 RÉVÉLATION " + "🔍")
+            print(f"L'enchère était : {target_amt} dés de {target_val}")
+            print(f"Résultat du comptage : {count} dés au total (Jokers inclus : {'Non' if is_palepico else 'Oui'})")
 
-            if count < dodo.bet[0]:
-                print(f"{dodo} loses the round!")
-                dodo.lost()
-                self.__current_betting_player_index = self.__current_betting_player_index - 1 if self.__current_betting_player_index - 1 >= 0 else len(self.__players) - 1
-                self.__dodo = False
-            else:
-                print(f"{self.__players[self.__current_betting_player_index]} loses the round!")
-                self.__players[self.__current_betting_player_index].lost()
-                self.__dodo = False
-    
+            if self.__action == "pile":
+                if count == target_amt:
+                    print(f"✨ TOUT PILE ! {caller} avait raison et récupère un dé !")
+                    caller.win_die()
+                else:
+                    print(f"❌ RATÉ ! Il n'y en avait pas pile {target_amt}. {caller} perd un dé.")
+                    caller.lost()
+            else: # Action "Dodo" (Menteur)
+                if count < target_amt:
+                    print(f"🎯 BIEN JOUÉ ! {bidder} a menti. {bidder} perd un dé.")
+                    bidder.lost()
+                else:
+                    print(f"🚫 PERDU ! L'enchère était bonne. {caller} perd un dé.")
+                    caller.lost()
+
+            # Nettoyage des joueurs éliminés
+            for p in list(self.__table):
+                if len(p.get_goblet()) == 0:
+                    self.__table.remove_player(p)
+
+        print("\n" + "🏆" * 15)
+        print(f" LA PARTIE EST FINIE ! VICTOIRE DE {self.__table.get_current_player()}")
+        print("🏆" * 15)
 
 if __name__ == "__main__":
-    players = [Player("Alice", "purple"), Player("Bob", "red")]
-    game = Game(players)
+    game = Game([Player("Alice", "Rouge"), Player("Bob", "Bleu"), Player("Charlie", "Vert")])
     game.game_loop()

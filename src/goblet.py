@@ -5,15 +5,9 @@ class Goblet:
         self.__color = color
         self.__size = capacity
         self.__content = [Dice(color) for _ in range(capacity)]
-    
-    def get_color(self):
-        return self.__color
 
     def get_capacity(self):
         return self.__size
-
-    def get_content(self):
-        return self.__content.copy()
 
     def add_dice(self, dice: Dice):
         if len(self.__content) < self.__size:   
@@ -31,11 +25,14 @@ class Goblet:
         for dice in self.__content:
             dice.roll()
     
-    def count_value(self, value):
+    def count_value(self, value, palepico=False):
+        if not palepico:
+            if value != 1:
+                return sum(1 for dice in self.__content if dice.get_value() == value or dice.get_value() == 1)
         return sum(1 for dice in self.__content if dice.get_value() == value)
 
     def __str__(self):
-        return f"{self.__content}"
+        return f"Gobelet de couleur {self.__color} avec {len(self.__content)} dés: {str(self.__content)}"
     
     def __repr__(self):
         return self.__content
