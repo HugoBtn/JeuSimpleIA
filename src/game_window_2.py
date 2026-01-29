@@ -26,17 +26,12 @@ class GameWindow(QMainWindow):
         central_widget.setStyleSheet("background-color: #2C3E50;")
         self.setCentralWidget(central_widget)
 
-        # =========================
-        # NEW: Root layout (left game area + right action panel)
-        # =========================
         root_layout = QHBoxLayout()
         central_widget.setLayout(root_layout)
 
-        # Left area (contains your existing UI)
         left_widget = QWidget()
         root_layout.addWidget(left_widget, stretch=3)
 
-        # Main vertical layout (UNCHANGED structure, just moved into left_widget)
         main_layout = QVBoxLayout()
         left_widget.setLayout(main_layout)
 
@@ -75,22 +70,19 @@ class GameWindow(QMainWindow):
         self.info_label.setStyleSheet("font-size: 14px; color: #ECF0F1; margin: 10px;")
         main_layout.addWidget(self.info_label)
 
-        # =========================
-        # NEW: Right-side panel (middle-right)
-        # =========================
+        # Right-side panel
         right_container = QWidget()
         right_layout = QVBoxLayout()
         right_container.setLayout(right_layout)
 
-        right_layout.addStretch()  # push panel to vertical middle
+        right_layout.addStretch()
         right_layout.addWidget(self._build_action_panel(), alignment=Qt.AlignRight)
         right_layout.addStretch()
 
         root_layout.addWidget(right_container, stretch=1)
 
-    # -------------------------
-    # NEW: Build the action panel widget
-    # -------------------------
+        self._refresh_action_panel()
+
     def _build_action_panel(self) -> QFrame:
         panel = QFrame()
         panel.setFrameShape(QFrame.StyledPanel)
@@ -99,7 +91,6 @@ class GameWindow(QMainWindow):
         panel_layout = QVBoxLayout()
         panel.setLayout(panel_layout)
 
-        # Title "Joueur 1" (for now static)
         self.player_title = QLabel("Joueur 1")
         self.player_title.setAlignment(Qt.AlignCenter)
         self.player_title.setStyleSheet("font-size: 18px; font-weight: bold; color: #2C3E50;")
@@ -107,11 +98,9 @@ class GameWindow(QMainWindow):
 
         panel_layout.addSpacing(10)
 
-        # Values
-        self.nb = 1       # 1..30
-        self.valeur = 1   # 1..6
+        self.nb = 1
+        self.valeur = 1
 
-        # Row: Nombre
         row_nb = QHBoxLayout()
         label_nb = QLabel("Nombre :")
         label_nb.setStyleSheet("color: #2C3E50; font-weight: bold;")
@@ -138,7 +127,6 @@ class GameWindow(QMainWindow):
 
         panel_layout.addSpacing(8)
 
-        # Row: Valeur
         row_val = QHBoxLayout()
         label_val = QLabel("Valeur :")
         label_val.setStyleSheet("color: #2C3E50; font-weight: bold;")
@@ -165,7 +153,6 @@ class GameWindow(QMainWindow):
 
         panel_layout.addStretch()
 
-        # Bottom buttons: dodo (left), Tout pile (center), validé (right)
         bottom_row = QHBoxLayout()
 
         btn_dodo = QPushButton("dodo")
@@ -185,25 +172,62 @@ class GameWindow(QMainWindow):
 
         panel_layout.addLayout(bottom_row)
 
-        # Panel style
-        panel.setStyleSheet("""
+        self.action_panel = panel
+        self.panel_base_style = """
             QFrame {
-                border: 1px solid #95A5A6;
+                border: 2px solid rgba(0,0,0,0.25);
                 border-radius: 12px;
                 padding: 10px;
-                background: #ECF0F1;
             }
             QPushButton {
                 padding: 6px;
                 font-weight: bold;
             }
-        """)
+        """
 
         return panel
 
-    # -------------------------
-    # NEW: +/- logic with bounds
-    # -------------------------
+    def _get_player_color(self, player) -> str:
+        if hasattr(player, "get_color"):
+            c = player.get_color()
+        elif hasattr(player, "color"):
+            c = player.color
+        else:
+            c = "#ECF0F1"
+
+        if not isinstance(c, str):
+            return "#ECF0F1"
+
+        c_low = c.strip().lower()
+
+        palette = {
+            "red": "#E74C3C",
+            "blue": "#3498DB",
+            "purple": "#9B59B6",
+        }
+
+        return palette.get(c_low, c)
+
+    def _get_player_name(self, player) -> str:
+        if hasattr(player, "get_name"):
+            return player.get_name()
+        if hasattr(player, "name"):
+            return player.name
+        return "Joueur"
+
+    def _refresh_action_panel(self):
+        player = self.players[self.active_player]
+        name = self._get_player_name(player)
+        color = self._get_player_color(player)
+
+        self.player_title.setText(name)
+
+        self.action_panel.setStyleSheet(self.panel_base_style + f"""
+            QFrame {{
+                background: {color};
+            }}
+        """)
+
     def _update_panel_labels(self):
         self.label_nb_value.setText(str(self.nb))
         self.label_val_value.setText(str(self.valeur))
@@ -228,9 +252,6 @@ class GameWindow(QMainWindow):
             self.valeur -= 1
             self._update_panel_labels()
 
-    # -------------------------
-    # NEW: action buttons handlers
-    # -------------------------
     def on_dodo(self):
         self.info_label.setText("Action: dodo")
 
@@ -240,32 +261,23 @@ class GameWindow(QMainWindow):
     def on_valider(self):
         self.info_label.setText(f"Annonce validée: nombre={self.nb}, valeur={self.valeur}")
 
-    # -------------------------
-    # Existing game methods (UNCHANGED)
-    # -------------------------
     def roll_dice(self):
-        """Roll dice for the active player """
-
-        # Roll dice for active player
         self.players[self.active_player].play()
-
-        # Update display for active player
         self.player_zones[self.active_player].show_dice()
 
         name = self.players[self.active_player].get_name()
         self.info_label.setText(f"{name} rolled the dice!")
 
+        self._refresh_action_panel()
+
     def next_player(self):
-        """Move to next player"""
-
-        # Hide current player's dice
         self.player_zones[self.active_player].hide_dice()
-
-        # Move to next
         self.active_player = (self.active_player + 1) % len(self.players)
 
         name = self.players[self.active_player].get_name()
         self.info_label.setText(f"It's {name}'s turn")
+
+        self._refresh_action_panel()
 
 
 if __name__ == "__main__":
