@@ -5,7 +5,6 @@ from player_zone import PlayerZone
 from player import Player
 import sys
 
-
 class GameWindow(QMainWindow):
     def __init__(self):
         super().__init__()
