@@ -120,7 +120,7 @@ class GameWindow(QMainWindow):
         layout.addStretch()
 
         # Create action panel
-        self.action_panel = ActionPanel()
+        self.action_panel = ActionPanel(self.players[self.active_player])
 
         # Connect buttons directly (no signals)
         self.action_panel.btn_valide.clicked.connect(self.on_bet_validated)
@@ -161,8 +161,7 @@ class GameWindow(QMainWindow):
     def update_action_panel(self):
         """Update the action panel for the active player"""
         current_player = self.players[self.active_player]
-        self.action_panel.set_player_name(current_player.get_name())
-        self.action_panel.set_player_color(current_player.get_color())
+        self.action_panel.set_player(current_player)
 
     def on_bet_validated(self):
         """Callback when bet is validated"""

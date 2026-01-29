@@ -5,16 +5,20 @@ from PySide6.QtCore import Qt
 class ActionPanel(QFrame):
     """Action panel for a player (right side panel)"""
 
-    def __init__(self):
+    def __init__(self, player):
         super().__init__()
         self.setFrameShape(QFrame.StyledPanel)
         self.setFixedWidth(280)
+
+        self.player = player
 
         # Default values
         self.nb = 1  # 1..30
         self.valeur = 1  # 1..6
 
         self._setup_ui()
+
+        self.set_player(player)
 
     def _setup_ui(self):
         """Build the panel interface"""
@@ -56,6 +60,12 @@ class ActionPanel(QFrame):
                 font-size: 12px;
             }
         """)
+
+    def set_player(self, player):
+        """Set the current player and update UI"""
+        self.player = player
+        self.set_player_name(player.get_name())
+        self.set_player_color(player.get_color())
 
     def _add_number_row(self, parent_layout):
         """Add the row for number"""
@@ -175,15 +185,33 @@ class ActionPanel(QFrame):
         self.player_title.setText(name)
 
     def set_player_color(self, color):
-        """Change the title color based on player"""
+        """Change the panel background color based on player"""
+
         color_map = {
-            "purple": "#9B59B6",
-            "red": "#E74C3C",
-            "blue": "#3498DB"
+            "red": "#FADBD8",
+            "blue": "#D6EAF8",
+            "purple": "#E8DAEF"
         }
-        css_color = color_map.get(color, "#2C3E50")
+
+        bg_color = color_map.get(color, "#ECF0F1")
+
+        self.setStyleSheet(f"""
+            QFrame {{
+                border: 2px solid #95A5A6;
+                border-radius: 12px;
+                padding: 15px;
+                background: {bg_color};
+            }}
+            QPushButton {{
+                padding: 8px;
+                font-weight: bold;
+                font-size: 12px;
+            }}
+        """)
+
+        # Titre lisible
         self.player_title.setStyleSheet(
-            f"font-size: 20px; font-weight: bold; color: {css_color};"
+            "font-size: 20px; font-weight: bold; color: #2C3E50;"
         )
 
     def reset_values(self):
