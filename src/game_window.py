@@ -125,6 +125,7 @@ class GameWindow(QMainWindow):
         # Connect buttons directly (no signals)
         self.action_panel.btn_valide.clicked.connect(self.on_bet_validated)
         self.action_panel.btn_dodo.clicked.connect(self.on_dodo)
+        self.action_panel.btn_tout_pile.clicked.connect(self.on_tout_pile)
 
         layout.addWidget(self.action_panel, alignment=Qt.AlignRight)
         layout.addStretch()
@@ -173,6 +174,11 @@ class GameWindow(QMainWindow):
         """Callback when DODO is called"""
         name = self.players[self.active_player].get_name()
         self.info_label.setText(f" {name} a appelé DODO!")
+
+    def on_tout_pile(self):
+        """Callback when TOUT PILE is called"""
+        name = self.players[self.active_player].get_name()
+        self.info_label.setText(f" {name} a appelé TOUT PILE!")
 
 
 if __name__ == "__main__":

@@ -17,7 +17,6 @@ class ActionPanel(QFrame):
         self.valeur = 1  # 1..6
 
         self._setup_ui()
-
         self.set_player(player)
 
     def _setup_ui(self):
@@ -34,24 +33,90 @@ class ActionPanel(QFrame):
         layout.addSpacing(20)
 
         # Row: Number
-        self._add_number_row(layout)
+        row_nb = QHBoxLayout()
+        label_nb = QLabel("Nombre :")
+        label_nb.setStyleSheet("color: #2C3E50; font-weight: bold; font-size: 12px;")
+
+        btn_nb_minus = QPushButton("-")
+        btn_nb_minus.setFixedWidth(40)
+        btn_nb_minus.clicked.connect(self._decrement_nb)
+
+        self.label_nb = QLabel(str(self.nb))
+        self.label_nb.setAlignment(Qt.AlignCenter)
+        self.label_nb.setFixedWidth(50)
+        self.label_nb.setStyleSheet("""
+            color: #2C3E50; 
+            font-size: 18px; 
+            font-weight: bold; 
+            background-color: white; 
+            border: 2px solid #95A5A6; 
+            border-radius: 5px; 
+        """)
+
+        btn_nb_plus = QPushButton("+")
+        btn_nb_plus.setFixedWidth(40)
+        btn_nb_plus.clicked.connect(self._increment_nb)
+
+        row_nb.addWidget(label_nb)
+        row_nb.addWidget(btn_nb_minus)
+        row_nb.addWidget(self.label_nb)
+        row_nb.addWidget(btn_nb_plus)
+        layout.addLayout(row_nb)
 
         layout.addSpacing(15)
 
         # Row: Value
-        self._add_value_row(layout)
+        row_val = QHBoxLayout()
+        label_val = QLabel("Valeur :")
+        label_val.setStyleSheet("color: #2C3E50; font-weight: bold; font-size: 12px;")
+
+        btn_val_minus = QPushButton("-")
+        btn_val_minus.setFixedWidth(40)
+        btn_val_minus.clicked.connect(self._decrement_valeur)
+
+        self.label_valeur = QLabel(str(self.valeur))
+        self.label_valeur.setAlignment(Qt.AlignCenter)
+        self.label_valeur.setFixedWidth(50)
+        self.label_valeur.setStyleSheet("""
+            color: #2C3E50; 
+            font-size: 18px; 
+            font-weight: bold; 
+            background-color: white; 
+            border: 2px solid #95A5A6; 
+            border-radius: 5px; 
+        """)
+
+        btn_val_plus = QPushButton("+")
+        btn_val_plus.setFixedWidth(40)
+        btn_val_plus.clicked.connect(self._increment_valeur)
+
+        row_val.addWidget(label_val)
+        row_val.addWidget(btn_val_minus)
+        row_val.addWidget(self.label_valeur)
+        row_val.addWidget(btn_val_plus)
+        layout.addLayout(row_val)
 
         layout.addStretch()
 
         # Bottom buttons
-        self._add_buttons(layout)
+        row_buttons = QHBoxLayout()
+
+        self.btn_dodo = QPushButton("Dodo")
+
+        self.btn_tout_pile = QPushButton("Tout pile")
+
+        self.btn_valide = QPushButton("Valider")
+
+        row_buttons.addWidget(self.btn_dodo)
+        row_buttons.addWidget(self.btn_tout_pile)
+        row_buttons.addWidget(self.btn_valide)
+        layout.addLayout(row_buttons)
 
         # Panel style
         self.setStyleSheet("""
             QFrame {
                 border: 2px solid #95A5A6;
                 border-radius: 12px;
-                padding: 15px;
                 background: #ECF0F1;
             }
             QPushButton {
@@ -66,91 +131,6 @@ class ActionPanel(QFrame):
         self.player = player
         self.set_player_name(player.get_name())
         self.set_player_color(player.get_color())
-
-    def _add_number_row(self, parent_layout):
-        """Add the row for number"""
-        row = QHBoxLayout()
-
-        label = QLabel("Nombre :")
-        label.setStyleSheet("color: #2C3E50; font-weight: bold; font-size: 14px;")
-
-        btn_minus = QPushButton("-")
-        btn_minus.setFixedWidth(40)
-        btn_minus.clicked.connect(self._decrement_nb)
-
-        self.label_nb = QLabel(str(self.nb))
-        self.label_nb.setAlignment(Qt.AlignCenter)
-        self.label_nb.setFixedWidth(50)
-        self.label_nb.setStyleSheet("""
-            color: #2C3E50; 
-            font-size: 18px; 
-            font-weight: bold; 
-            background-color: white; 
-            border: 2px solid #95A5A6; 
-            border-radius: 5px; 
-            padding: 5px;
-        """)
-
-        btn_plus = QPushButton("+")
-        btn_plus.setFixedWidth(40)
-        btn_plus.clicked.connect(self._increment_nb)
-
-        row.addWidget(label)
-        row.addWidget(btn_minus)
-        row.addWidget(self.label_nb)
-        row.addWidget(btn_plus)
-
-        parent_layout.addLayout(row)
-
-    def _add_value_row(self, parent_layout):
-        """Add the row for value"""
-        row = QHBoxLayout()
-
-        label = QLabel("Valeur :")
-        label.setStyleSheet("color: #2C3E50; font-weight: bold; font-size: 14px;")
-
-        btn_minus = QPushButton("-")
-        btn_minus.setFixedWidth(40)
-        btn_minus.clicked.connect(self._decrement_valeur)
-
-        self.label_valeur = QLabel(str(self.valeur))
-        self.label_valeur.setAlignment(Qt.AlignCenter)
-        self.label_valeur.setFixedWidth(50)
-        self.label_valeur.setStyleSheet("""
-            color: #2C3E50; 
-            font-size: 18px; 
-            font-weight: bold; 
-            background-color: white; 
-            border: 2px solid #95A5A6; 
-            border-radius: 5px; 
-            padding: 5px;
-        """)
-
-        btn_plus = QPushButton("+")
-        btn_plus.setFixedWidth(40)
-        btn_plus.clicked.connect(self._increment_valeur)
-
-        row.addWidget(label)
-        row.addWidget(btn_minus)
-        row.addWidget(self.label_valeur)
-        row.addWidget(btn_plus)
-
-        parent_layout.addLayout(row)
-
-    def _add_buttons(self, parent_layout):
-        """Add the bottom buttons"""
-        row = QHBoxLayout()
-
-        self.btn_dodo = QPushButton("DODO")
-        self.btn_dodo.setStyleSheet("background-color: #E74C3C; color: white;")
-
-        self.btn_valide = QPushButton("VALIDER")
-        self.btn_valide.setStyleSheet("background-color: #27AE60; color: white;")
-
-        row.addWidget(self.btn_dodo)
-        row.addWidget(self.btn_valide)
-
-        parent_layout.addLayout(row)
 
     def _increment_nb(self):
         """Increment the number"""
@@ -188,18 +168,18 @@ class ActionPanel(QFrame):
         """Change the panel background color based on player"""
 
         color_map = {
-            "red": "#FADBD8",
-            "blue": "#D6EAF8",
-            "purple": "#E8DAEF"
+            "red": "rgb(220, 100, 100)",
+            "blue": "rgb(100, 150, 220)",
+            "purple": "rgb(147, 112, 219)"
         }
 
         bg_color = color_map.get(color, "#ECF0F1")
 
         self.setStyleSheet(f"""
             QFrame {{
-                border: 2px solid #95A5A6;
+                border: 2px solid #D3D3D3;
                 border-radius: 12px;
-                padding: 15px;
+                padding: 10px;
                 background: {bg_color};
             }}
             QPushButton {{

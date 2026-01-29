@@ -15,7 +15,7 @@ class PlayerZone(QWidget):
 
         # Player name
         self.name_label = QLabel(f"{player.get_name()}")
-        self.name_label.setStyleSheet("font-size: 14px; font-weight: bold;color: black")
+        self.name_label.setStyleSheet("font-size: 14px; font-weight: bold;color: white;background-color: #212F3C;")
         layout.addWidget(self.name_label)
 
         # Container for dice
