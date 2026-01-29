@@ -160,17 +160,17 @@ class GameWindow(QMainWindow):
         """Callback when bet is validated"""
         nombre, valeur = self.action_panel.get_bet()
         name = self.players[self.active_player].get_name()
-        self.info_label.setText(f"✓ {name} a validé: {nombre}x {valeur}")
+        self.info_label.setText(f" {name} a validé: {nombre}x {valeur}")
 
     def on_dodo(self):
         """Callback when DODO is called"""
         name = self.players[self.active_player].get_name()
-        self.info_label.setText(f" {name} a appelé DODO!")
+        self.info_label.setText(f" {name} a appelé Dodo!")
 
     def on_tout_pile(self):
         """Callback when TOUT PILE is called"""
         name = self.players[self.active_player].get_name()
-        self.info_label.setText(f" {name} a appelé TOUT PILE!")
+        self.info_label.setText(f" {name} a appelé Tout pile!")
 
 
 if __name__ == "__main__":
