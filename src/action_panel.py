@@ -11,8 +11,6 @@ class ActionPanel(QFrame):
         self.setFixedWidth(280)
 
         self.player = player
-
-        # Default values
         self.nb = 1
         self.valeur = 1
 
@@ -41,7 +39,7 @@ class ActionPanel(QFrame):
         self.btn_dodo = QPushButton("Dodo")
         self.btn_tout_pile = QPushButton("Tout pile")
 
-        # (option) show selected action with a subtle checked border
+        # (option) action buttons selectable => subtle "selected" border
         for b in (self.btn_valeur, self.btn_dodo, self.btn_tout_pile):
             b.setCheckable(True)
 
@@ -52,15 +50,14 @@ class ActionPanel(QFrame):
         row_actions.addWidget(self.btn_valeur)
         row_actions.addWidget(self.btn_dodo)
         row_actions.addWidget(self.btn_tout_pile)
-
         layout.addLayout(row_actions)
+
         layout.addSpacing(12)
 
         # --- Bet inputs container (hidden unless "Valeur" selected)
         self.bet_widget = QWidget()
         bet_layout = QVBoxLayout()
         bet_layout.setContentsMargins(0, 0, 0, 0)
-        bet_layout.setSpacing(10)
         self.bet_widget.setLayout(bet_layout)
         self.bet_widget.setStyleSheet("background: transparent;")
 
@@ -87,6 +84,8 @@ class ActionPanel(QFrame):
         row_nb.addWidget(self.label_nb)
         row_nb.addWidget(self.btn_nb_plus)
         bet_layout.addLayout(row_nb)
+
+        bet_layout.addSpacing(10)
 
         # Row: Value
         row_val = QHBoxLayout()
@@ -119,32 +118,10 @@ class ActionPanel(QFrame):
         self.btn_valider = QPushButton("Valider")
         layout.addWidget(self.btn_valider)
 
-        # Compat si ton code utilise encore btn_valide ailleurs
+        # Compat si ailleurs ton code utilise encore btn_valide
         self.btn_valide = self.btn_valider
 
-        # Hide bet inputs by default
-        self.bet_widget.setVisible(False)
-
-        # ---- FORCE style for +/- buttons (robust)
-        step_style = """
-            QPushButton {
-                background-color: #2C3E50;
-                color: #ECF0F1;
-                border: none;
-                border-radius: 6px;
-                padding: 8px;
-                font-weight: bold;
-                font-size: 12px;
-            }
-            QPushButton:hover { background-color: #1F2E3A; }
-            QPushButton:pressed { background-color: #16222B; }
-        """
-        self.btn_nb_minus.setStyleSheet(step_style)
-        self.btn_nb_plus.setStyleSheet(step_style)
-        self.btn_val_minus.setStyleSheet(step_style)
-        self.btn_val_plus.setStyleSheet(step_style)
-
-        # Base style (panel + all other buttons)
+        # Base style (neutral, then recolored in set_player_color)
         self.setStyleSheet("""
             QFrame {
                 border: 2px solid #95A5A6;
@@ -152,39 +129,15 @@ class ActionPanel(QFrame):
                 background: #ECF0F1;
                 padding: 10px;
             }
-            QLabel#ValueBox {
-                color: #2C3E50;
-                font-size: 18px;
-                font-weight: bold;
-                background-color: white;
-                border: 2px solid #95A5A6;
-                border-radius: 5px;
-                padding: 6px;
-            }
             QPushButton {
                 padding: 8px;
                 font-weight: bold;
                 font-size: 12px;
-                background-color: #ECF0F1;
-                color: #2C3E50;
-                border: 2px solid #95A5A6;
-                border-radius: 6px;
             }
-            QPushButton:hover { background-color: #D0D3D4; }
-            QPushButton:pressed { background-color: #B3B6B7; }
-            QPushButton:checked { border: 2px solid #2C3E50; }
-
-            /* Validate button (main action) */
-            QPushButton[text="Valider"] {
-                background-color: #34495E;
-                color: #ECF0F1;
-                border: none;
-                border-radius: 8px;
-                padding: 10px;
-                font-size: 13px;
-            }
-            QPushButton[text="Valider"]:hover { background-color: #2C3E50; }
         """)
+
+        # Hide bet inputs by default
+        self.bet_widget.setVisible(False)
 
     # ---- Action selection
     def _uncheck_actions(self):
@@ -212,7 +165,6 @@ class ActionPanel(QFrame):
         self.bet_widget.setVisible(False)
 
     def get_selected_action(self):
-        """Return ('bet', (nb, val)) or ('dodo', None) or ('tout_pile', None) or (None, None)."""
         if self._selected_action == "bet":
             return "bet", (self.nb, self.valeur)
         if self._selected_action in ("dodo", "tout_pile"):
@@ -236,7 +188,7 @@ class ActionPanel(QFrame):
         self.player_title.setText(name)
 
     def set_player_color(self, color):
-        """Change panel background color based on player (and keep global style)."""
+        """Explicit button styling to avoid OS dark-blue buttons."""
         color_map = {
             "red": "rgb(220, 100, 100)",
             "blue": "rgb(100, 150, 220)",
@@ -244,13 +196,66 @@ class ActionPanel(QFrame):
         }
         bg_color = color_map.get(color, "#ECF0F1")
 
-        # IMPORTANT: This overrides the panel background without breaking +/- direct styles
-        self.setStyleSheet(self.styleSheet() + f"""
+        self.setStyleSheet(f"""
             QFrame {{
-                background: {bg_color};
                 border: 2px solid #D3D3D3;
                 border-radius: 12px;
                 padding: 10px;
+                background: {bg_color};
+            }}
+
+            QLabel {{
+                color: #2C3E50;
+                font-weight: bold;
+                font-size: 12px;
+            }}
+
+            QLabel#ValueBox {{
+                color: #2C3E50;
+                font-size: 18px;
+                font-weight: bold;
+                background-color: white;
+                border: 2px solid #95A5A6;
+                border-radius: 5px;
+                padding: 6px;
+            }}
+
+            /* All buttons: "like before" (light background, readable text) */
+            QPushButton {{
+                padding: 8px;
+                font-weight: bold;
+                font-size: 12px;
+                background-color: #ECF0F1;
+                color: #2C3E50;
+                border: 2px solid #95A5A6;
+                border-radius: 6px;
+            }}
+
+            QPushButton:hover {{
+                background-color: #D0D3D4;
+            }}
+
+            QPushButton:pressed {{
+                background-color: #B3B6B7;
+            }}
+
+            /* Selected action (subtle) */
+            QPushButton:checked {{
+                border: 2px solid #2C3E50;
+            }}
+
+            /* Validate button: same big dark button vibe as before */
+            QPushButton[text="Valider"] {{
+                background-color: #34495E;
+                color: #ECF0F1;
+                border: none;
+                border-radius: 8px;
+                padding: 10px;
+                font-size: 13px;
+            }}
+
+            QPushButton[text="Valider"]:hover {{
+                background-color: #2C3E50;
             }}
         """)
 
