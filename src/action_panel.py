@@ -58,6 +58,7 @@ class ActionPanel(QFrame):
         bet_layout = QVBoxLayout()
         bet_layout.setContentsMargins(0, 0, 0, 0)
         self.bet_widget.setLayout(bet_layout)
+        self.bet_widget.setStyleSheet("background: transparent;")
 
         # Row: Number
         row_nb = QHBoxLayout()
@@ -132,6 +133,9 @@ class ActionPanel(QFrame):
         layout.addWidget(self.btn_valider)
 
         # Base style
+        for btn in [btn_nb_minus, btn_nb_plus, btn_val_minus, btn_val_plus]:
+            btn.setStyleSheet("""background-color: #2C3E50""")
+
         self.setStyleSheet("""
             QFrame {
                 border: 2px solid #95A5A6;
