@@ -313,6 +313,7 @@ class GameWindow(QMainWindow):
         for zone in self.player_zones:
             zone.update_dice_count()
 
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = GameWindow()
