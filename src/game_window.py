@@ -29,6 +29,9 @@ class GameWindow(QMainWindow):
         # Create game logic object
         self.game = Game(self.players)
 
+        # Round state
+        self.round_started = False
+
         self._setup_ui()
 
     def _setup_ui(self):
@@ -69,11 +72,11 @@ class GameWindow(QMainWindow):
             self.player_zones.append(zone)
             layout.addWidget(zone)
 
-        # Buttons
+        # Button to start round
         buttons_layout = QHBoxLayout()
 
-        btn_roll = QPushButton(" Lancer les dés")
-        btn_roll.setStyleSheet("""
+        self.btn_start_round = QPushButton(" Lancer le tour")
+        self.btn_start_round.setStyleSheet("""
                     font-size: 14px; 
                     padding: 10px; 
                     background-color: #E74C3C; 
@@ -81,20 +84,8 @@ class GameWindow(QMainWindow):
                     font-weight: bold; 
                     border-radius: 5px;
                 """)
-        btn_roll.clicked.connect(self.roll_dice)
-        buttons_layout.addWidget(btn_roll)
-
-        btn_next = QPushButton(" Joueur suivant")
-        btn_next.setStyleSheet("""
-                    font-size: 14px; 
-                    padding: 10px; 
-                    background-color: #3498DB; 
-                    color: #ECF0F1; 
-                    font-weight: bold; 
-                    border-radius: 5px;
-                """)
-        btn_next.clicked.connect(self.next_player)
-        buttons_layout.addWidget(btn_next)
+        self.btn_start_round.clicked.connect(self.start_round)
+        buttons_layout.addWidget(self.btn_start_round)
 
         layout.addLayout(buttons_layout)
 
@@ -111,7 +102,7 @@ class GameWindow(QMainWindow):
         layout.addWidget(self.current_bet_label)
 
         # Info label
-        self.info_label = QLabel("Cliquez sur 'Lancer les dés' pour commencer")
+        self.info_label = QLabel("Cliquez sur 'Lancer le tour' pour commencer")
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("""
             font-size: 14px; 
@@ -135,39 +126,55 @@ class GameWindow(QMainWindow):
         # Create action panel
         self.action_panel = ActionPanel(self.players[self.active_player])
 
-        # Connect buttons directly
-        self.action_panel.btn_valide.clicked.connect(self.on_bet_validated)
-        self.action_panel.btn_dodo.clicked.connect(self.on_dodo)
-        self.action_panel.btn_tout_pile.clicked.connect(self.on_tout_pile)
+        # Connect ONLY the validate button
+        self.action_panel.btn_valider.clicked.connect(self.on_validate_action)
 
         layout.addWidget(self.action_panel, alignment=Qt.AlignRight)
         layout.addStretch()
 
         return widget
 
-    def roll_dice(self):
-        """Roll dice for all players (start new round)"""
-        # Start new round
-        self.game.start_new_round()
+# Dice
+    def _hide_all_dice(self):
+        """Hide all players' dice"""
+        for zone in self.player_zones:
+            zone.hide_dice()
 
-        # Show all dice temporarily to verify they rolled
+    def _show_active_player_dice(self):
+        """Show only the active player's dice"""
+        self._hide_all_dice()
+        if self.round_started:
+            self.player_zones[self.active_player].show_dice()
+
+    def _show_all_dice(self):
+        """Show all players' dice (for resolution)"""
         for zone in self.player_zones:
             zone.show_dice()
+# Round
+    def start_round(self):
+        """Roll dice for all players and start the round"""
+        # Start new round in game logic
+        self.game.start_new_round()
+        self.round_started = True
 
-        # Update current bet display
+        # Update UI
+        self._show_active_player_dice()
         self.update_current_bet_display()
+
+        name = self.players[self.active_player].get_name()
+        self.info_label.setText(f"Tour lancé ! {name}, à toi de jouer.")
 
     def next_player(self):
         """Move to next player"""
-        # Hide current player's dice
-        self.player_zones[self.active_player].hide_dice()
-
         # Move to next player
         self.active_player = (self.active_player + 1) % len(self.players)
 
         # Update the action panel
         current_player = self.players[self.active_player]
         self.action_panel.set_player(current_player)
+
+        # Show only active player's dice
+        self._show_active_player_dice()
 
         # Update info
         name = self.players[self.active_player].get_name()
@@ -184,18 +191,38 @@ class GameWindow(QMainWindow):
             value_text = "PACO" if value == 1 else f"{value}"
 
             # Add palepico warning if in palepico mode
-            palepico_warning = "  PALEPICO MODE" if self.game.is_palepico_mode() else ""
+            palepico_warning = "  [PALEPICO MODE]" if self.game.is_palepico_mode() else ""
 
             self.current_bet_label.setText(
                 f"Pari actuel : {current_bet.get_quantity()} × {value_text}{palepico_warning}"
             )
 
-    def on_bet_validated(self):
-        """Callback when bet is validated"""
-        nombre, valeur = self.action_panel.get_bet()
+    # Actions
+    def on_validate_action(self):
+        """Callback when any action is validated"""
+        if not self.round_started:
+            self.info_label.setText(" Lance d'abord le tour (Lancer le tour).")
+            return
+
+        # Get selected action from panel
+        action, bet_values = self.action_panel.get_selected_action()
         name = self.players[self.active_player].get_name()
 
-        # Create Bet object
+        if action is None:
+            self.info_label.setText(" Choisis d'abord une action : Valeur, Dodo ou Tout pile.")
+            return
+
+        # Handle each action type
+        if action == "bet":
+            self._handle_bet(bet_values, name)
+        elif action == "dodo":
+            self._handle_dodo(name)
+        elif action == "tout_pile":
+            self._handle_tout_pile(name)
+
+    def _handle_bet(self, bet_values, name):
+        """Handle a bet action"""
+        nombre, valeur = bet_values
         new_bet = Bet(nombre, valeur)
 
         # Check if in palepico mode
@@ -213,8 +240,8 @@ class GameWindow(QMainWindow):
             self.info_label.setText(f" {name} parie : {nombre} × {value_text}")
             self.update_current_bet_display()
 
-            # Reset panel values for next player
-            self.action_panel.reset_values()
+            # Reset action selection for next player
+            self.action_panel.reset_action()
 
             # Update game's betting player index
             self.game.next_betting_player()
@@ -237,76 +264,55 @@ class GameWindow(QMainWindow):
 
                 self.info_label.setText(error_msg)
 
-    def show_all_dice(self):
-        """Show all players' dice"""
-        for zone in self.player_zones:
-            zone.show_dice()
-
-    def on_dodo(self):
-        """Callback when DODO is called"""
-        name = self.players[self.active_player].get_name()
-
+    def _handle_action(self, name, call_name, resolve_function):
+        """
+        Handler for Dodo and Tout pile
+        """
         # Check if there's a bet to challenge
         if self.game.get_current_bet() is None:
-            self.info_label.setText(" Impossible d'appeler DODO : aucun pari actif!")
+            self.info_label.setText(f"Aucun pari actif!")
             return
 
         # Show all dice before resolution
-        self.show_all_dice()
+        self._show_all_dice()
 
-        # Resolve DODO
-        result = self.game.resolve_dodo()
+        # Resolve call (DODO or TOUT PILE)
+        result = resolve_function()
 
-        # Show result in info label
-        self.info_label.setText(f" {name} a appelé DODO! {result['message']}")
+        # Show result
+        self.info_label.setText(
+            f" {name} a appelé {call_name.upper()}! {result['message']}"
+        )
 
-        # Update current bet display
+        # Update UI
         self.update_current_bet_display()
-
-        # Update player zones to reflect lost dice
         self._update_player_zones()
+        self.action_panel.reset_action()
 
-        # If game is over, disable controls
-        if result['game_over']:
+        # End game?
+        if result["game_over"]:
+            winner_name = result["winner"].get_name()
+            QMessageBox.information(
+                self,
+                "Partie terminée",
+                f" {winner_name} remporte la partie!"
+            )
             self.action_panel.setEnabled(False)
-        else:
-            # Move to the player who should start next round
-            self.active_player = self.game.get_current_player_index()
-            self.action_panel.set_player(self.players[self.active_player])
-            self.action_panel.reset_values()
-
-    def on_tout_pile(self):
-        """Callback when TOUT PILE is called"""
-        name = self.players[self.active_player].get_name()
-
-        # Check if there's a bet to challenge
-        if self.game.get_current_bet() is None:
-            self.info_label.setText(" Impossible d'appeler TOUT PILE : aucun pari actif!")
+            self.btn_start_round.setEnabled(False)
             return
 
-        # Show all dice before resolution
-        self.show_all_dice()
+        # Prepare next round
+        self.active_player = self.game.get_current_player_index()
+        self.action_panel.set_player(self.players[self.active_player])
 
-        # Resolve TOUT PILE
-        result = self.game.resolve_tout_pile()
+        self.round_started = False
+        self._hide_all_dice()
 
-        # Show result in info label
-        self.info_label.setText(f" {name} a appelé TOUT PILE! {result['message']}")
+    def _handle_dodo(self, name):
+        self._handle_action(name=name, call_name="dodo", resolve_function=self.game.resolve_dodo)
 
-        # Update current bet display
-        self.update_current_bet_display()
-
-        # Update player zones to reflect lost dice
-        self._update_player_zones()
-
-        # If game is over, disable controls
-        if result['game_over']:
-            self.action_panel.setEnabled(False)
-        else:
-            # Move to the player who should start next round
-            self.active_player = self.game.get_current_player_index()
-            self.action_panel.set_player(self.players[self.active_player])
-            self.action_panel.reset_values()
+    def _handle_tout_pile(self, name):
+        self._handle_action(name=name,call_name="tout pile",resolve_function=self.game.resolve_tout_pile)
 
     def _update_player_zones(self):
         """Update all player zones to reflect current dice counts"""
