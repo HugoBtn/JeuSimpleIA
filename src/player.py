@@ -1,5 +1,5 @@
 from goblet import Goblet
-from bid import Bid
+from bet import Bet
 
 
 class Player:
@@ -34,7 +34,7 @@ class Player:
             self.bet = "dodo"
         else:
             amount, value = map(int, bet.strip("()").split(","))
-            self.bet = Bid(amount,value)
+            self.bet = Bet(amount,value)
     def lost(self):
         """Player loses a die"""
         if len(self.__goblet.get_content()) > 0:

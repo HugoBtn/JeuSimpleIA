@@ -6,6 +6,9 @@ from player import Player
 from action_panel import ActionPanel
 import sys
 
+from src.bet import Bet
+from src.game import Game
+
 
 class GameWindow(QMainWindow):
     """Main window for Perudo game"""
@@ -24,7 +27,14 @@ class GameWindow(QMainWindow):
         ]
         self.active_player = 0
 
+        # Create game logic object
+        self.game = Game(self.players)
+
+        # Track current bet
+        self.current_bet = None
+
         self._setup_ui()
+
 
     def _setup_ui(self):
         """Build the interface"""
@@ -93,6 +103,18 @@ class GameWindow(QMainWindow):
 
         layout.addLayout(buttons_layout)
 
+        # Current bet display
+        self.current_bet_label = QLabel("Pari actuel : Aucun")
+        self.current_bet_label.setAlignment(Qt.AlignCenter)
+        self.current_bet_label.setStyleSheet("""
+                    font-size: 16px; 
+                    color: white; 
+                    padding: 8px; 
+                    background-color: #34495E; 
+                    border-radius: 5px;
+                """)
+        layout.addWidget(self.current_bet_label)
+
         # Info label
         self.info_label = QLabel("Cliquez sur 'Lancer les dés' pour commencer")
         self.info_label.setAlignment(Qt.AlignCenter)
@@ -156,11 +178,61 @@ class GameWindow(QMainWindow):
         name = self.players[self.active_player].get_name()
         self.info_label.setText(f"C'est au tour de {name}")
 
+    def update_current_bet_display(self):
+        """Update the current bet display"""
+        if self.current_bet is None:
+            self.current_bet_label.setText("Pari actuel : Aucun")
+        else:
+            bet = self.current_bet
+            value_text = f"{bet.get_value()}"
+            self.current_bet_label.setText(f"Pari actuel : {bet.get_quantity()} × {value_text}")
+
     def on_bet_validated(self):
         """Callback when bet is validated"""
         nombre, valeur = self.action_panel.get_bet()
         name = self.players[self.active_player].get_name()
-        self.info_label.setText(f" {name} a validé: {nombre}x {valeur}")
+
+        # Create Bid object
+        new_bet = Bet(nombre, valeur)
+
+        # Check if in palepico mode
+        palepico = self.game.is_palepico_mode()
+        if new_bet.is_valid_raise(self.current_bet, palepico=palepico):
+            # Save the bet
+            self.current_bet = new_bet
+            self.players[self.active_player].bet = new_bet
+
+            # Update display
+            value_text = "PACO" if valeur == 1 else f"valeur {valeur}"
+            self.info_label.setText(f" {name} parie : {nombre}× {value_text}")
+            self.update_current_bet_display()
+
+            # Reset panel values for next player
+            self.action_panel.reset_values()
+
+            # Move to next player
+            self.next_player()
+        else:
+            # Invalid bet
+            if self.current_bet is None:
+                self.info_label.setText(f" Erreur dans le pari")
+            else:
+                current = self.current_bet
+                current_val_text = "PACO" if current.get_value() == 1 else f"val. {current.get_value()}"
+
+                # Error messages
+                if palepico:
+                    self.info_label.setText(
+                        f" PALEPICO! Même valeur seulement. Actuel: {current.get_quantity()}× {current_val_text}"
+                    )
+                elif current.get_value() == 1 or valeur == 1:
+                    self.info_label.setText(
+                        f" Règle PACO non respectée! Actuel: {current.get_quantity()}× {current_val_text}"
+                    )
+                else:
+                    self.info_label.setText(
+                        f" Pari trop bas! Doit être > {current.get_quantity()}× {current_val_text}"
+                    )
 
     def on_dodo(self):
         """Callback when DODO is called"""
