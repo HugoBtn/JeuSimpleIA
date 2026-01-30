@@ -154,10 +154,6 @@ class GameWindow(QMainWindow):
         for zone in self.player_zones:
             zone.show_dice()
 
-        # Update info
-        self.info_label.setText(
-            " Tous les joueurs ont lancé les dés! Tour de " + self.players[self.active_player].get_name())
-
         # Update current bet display
         self.update_current_bet_display()
 
