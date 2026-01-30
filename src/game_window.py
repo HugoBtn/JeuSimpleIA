@@ -1,13 +1,12 @@
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget,
-                               QVBoxLayout, QHBoxLayout, QLabel, QPushButton)
+                               QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox)
 from PySide6.QtCore import Qt
 from player_zone import PlayerZone
 from player import Player
 from action_panel import ActionPanel
+from bet import Bet
+from game import Game
 import sys
-
-from src.bet import Bet
-from src.game import Game
 
 
 class GameWindow(QMainWindow):
@@ -30,11 +29,7 @@ class GameWindow(QMainWindow):
         # Create game logic object
         self.game = Game(self.players)
 
-        # Track current bet
-        self.current_bet = None
-
         self._setup_ui()
-
 
     def _setup_ui(self):
         """Build the interface"""
@@ -151,16 +146,20 @@ class GameWindow(QMainWindow):
         return widget
 
     def roll_dice(self):
-        """Roll dice for the active player"""
-        # Roll the dice
-        self.players[self.active_player].play()
+        """Roll dice for all players (start new round)"""
+        # Start new round
+        self.game.start_new_round()
 
-        # Show the dice
-        self.player_zones[self.active_player].show_dice()
+        # Show all dice temporarily to verify they rolled
+        for zone in self.player_zones:
+            zone.show_dice()
 
         # Update info
-        name = self.players[self.active_player].get_name()
-        self.info_label.setText(f"{name} a lancé les dés!")
+        self.info_label.setText(
+            " Tous les joueurs ont lancé les dés! Tour de " + self.players[self.active_player].get_name())
+
+        # Update current bet display
+        self.update_current_bet_display()
 
     def next_player(self):
         """Move to next player"""
@@ -180,69 +179,155 @@ class GameWindow(QMainWindow):
 
     def update_current_bet_display(self):
         """Update the current bet display"""
-        if self.current_bet is None:
+        current_bet = self.game.get_current_bet()
+
+        if current_bet is None:
             self.current_bet_label.setText("Pari actuel : Aucun")
         else:
-            bet = self.current_bet
-            value_text = f"{bet.get_value()}"
-            self.current_bet_label.setText(f"Pari actuel : {bet.get_quantity()} × {value_text}")
+            value = current_bet.get_value()
+            value_text = "PACO" if value == 1 else f"{value}"
+
+            # Add palepico warning if in palepico mode
+            palepico_warning = "  PALEPICO MODE" if self.game.is_palepico_mode() else ""
+
+            self.current_bet_label.setText(
+                f"Pari actuel : {current_bet.get_quantity()} × {value_text}{palepico_warning}"
+            )
 
     def on_bet_validated(self):
         """Callback when bet is validated"""
         nombre, valeur = self.action_panel.get_bet()
         name = self.players[self.active_player].get_name()
 
-        # Create Bid object
+        # Create Bet object
         new_bet = Bet(nombre, valeur)
 
         # Check if in palepico mode
         palepico = self.game.is_palepico_mode()
-        if new_bet.is_valid_raise(self.current_bet, palepico=palepico):
-            # Save the bet
-            self.current_bet = new_bet
+        current_bet = self.game.get_current_bet()
+
+        # Validate the bet using Bet's is_valid_raise method
+        if new_bet.is_valid_raise(current_bet, palepico=palepico):
+            # Save the bet in game
+            self.game.set_current_bet(new_bet)
             self.players[self.active_player].bet = new_bet
 
             # Update display
             value_text = "PACO" if valeur == 1 else f"valeur {valeur}"
-            self.info_label.setText(f" {name} parie : {nombre}× {value_text}")
+            self.info_label.setText(f" {name} parie : {nombre} × {value_text}")
             self.update_current_bet_display()
 
             # Reset panel values for next player
             self.action_panel.reset_values()
 
-            # Move to next player
+            # Update game's betting player index
+            self.game.next_betting_player()
+
+            # Move to next player in UI
             self.next_player()
         else:
-            # Invalid bet
-            if self.current_bet is None:
-                self.info_label.setText(f" Erreur dans le pari")
+            # Invalid bet - generate error message
+            if current_bet is None:
+                self.info_label.setText(" Erreur dans le pari")
             else:
-                current = self.current_bet
-                current_val_text = "PACO" if current.get_value() == 1 else f"val. {current.get_value()}"
+                current_val_text = "PACO" if current_bet.get_value() == 1 else f"val. {current_bet.get_value()}"
 
-                # Error messages
                 if palepico:
-                    self.info_label.setText(
-                        f" PALEPICO! Même valeur seulement. Actuel: {current.get_quantity()}× {current_val_text}"
-                    )
-                elif current.get_value() == 1 or valeur == 1:
-                    self.info_label.setText(
-                        f" Règle PACO non respectée! Actuel: {current.get_quantity()}× {current_val_text}"
-                    )
+                    error_msg = f" PALEPICO! Même valeur seulement. Actuel: {current_bet.get_quantity()}× {current_val_text}"
+                elif current_bet.get_value() == 1 or valeur == 1:
+                    error_msg = f" Règle PACO non respectée! Actuel: {current_bet.get_quantity()}× {current_val_text}"
                 else:
-                    self.info_label.setText(
-                        f" Pari trop bas! Doit être > {current.get_quantity()}× {current_val_text}"
-                    )
+                    error_msg = f" Pari trop bas! Doit être > {current_bet.get_quantity()}× {current_val_text}"
+
+                self.info_label.setText(error_msg)
+
+    def show_all_dice(self):
+        """Show all players' dice"""
+        for zone in self.player_zones:
+            zone.show_dice()
 
     def on_dodo(self):
         """Callback when DODO is called"""
         name = self.players[self.active_player].get_name()
-        self.info_label.setText(f" {name} a appelé Dodo!")
+
+        # Check if there's a bet to challenge
+        if self.game.get_current_bet() is None:
+            self.info_label.setText(" Impossible d'appeler DODO : aucun pari actif!")
+            return
+
+        # Show all dice before resolution
+        self.show_all_dice()
+
+        # Resolve DODO
+        result = self.game.resolve_dodo()
+
+        # Show result in info label
+        self.info_label.setText(f" {name} a appelé DODO! {result['message']}")
+
+        # Update current bet display
+        self.update_current_bet_display()
+
+        # Update player zones to reflect lost dice
+        self._update_player_zones()
+
+        # If game is over, disable controls
+        if result['game_over']:
+            self.action_panel.setEnabled(False)
+        else:
+            # Move to the player who should start next round
+            self.active_player = self.game.get_current_player_index()
+            self.action_panel.set_player(self.players[self.active_player])
+            self.action_panel.reset_values()
 
     def on_tout_pile(self):
         """Callback when TOUT PILE is called"""
         name = self.players[self.active_player].get_name()
-        self.info_label.setText(f" {name} a appelé Tout pile!")
+
+        # Check if there's a bet to challenge
+        if self.game.get_current_bet() is None:
+            self.info_label.setText(" Impossible d'appeler TOUT PILE : aucun pari actif!")
+            return
+
+        # Show all dice before resolution
+        self.show_all_dice()
+
+        # Resolve TOUT PILE
+        result = self.game.resolve_tout_pile()
+
+        # Show result in info label
+        self.info_label.setText(f" {name} a appelé TOUT PILE! {result['message']}")
+
+        # Update current bet display
+        self.update_current_bet_display()
+
+        # Update player zones to reflect lost dice
+        self._update_player_zones()
+
+        # If game is over, disable controls
+        if result['game_over']:
+            self.action_panel.setEnabled(False)
+        else:
+            # Move to the player who should start next round
+            self.active_player = self.game.get_current_player_index()
+            self.action_panel.set_player(self.players[self.active_player])
+            self.action_panel.reset_values()
+
+    def _update_player_zones(self):
+        """Update all player zones to reflect current dice counts"""
+        for i, player in enumerate(self.players):
+            # Remove old zone
+            old_zone = self.player_zones[i]
+            old_zone.setParent(None)
+
+            # Create new zone with updated dice
+            new_zone = PlayerZone(player)
+            self.player_zones[i] = new_zone
+
+            # Insert at the same position
+            left_widget = self.centralWidget().layout().itemAt(0).widget()
+            left_layout = left_widget.layout()
+            # Insert after title (index 1) and before buttons
+            left_layout.insertWidget(i + 1, new_zone)
 
 
 if __name__ == "__main__":

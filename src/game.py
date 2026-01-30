@@ -7,19 +7,167 @@ class Game:
         self.__players = players
         self.__current_betting_player_index = 0
         self.__current_bet = None
-        self.__dodo = False
+        self.__round_active = False
 
     def is_palepico_mode(self):
         """Check if a player has only one dice left"""
         return any(p.get_goblet_length() == 1 for p in self.__players)
 
+    def get_current_player_index(self):
+        """Get the index of the current betting player"""
+        return self.__current_betting_player_index
+
+    def get_current_bet(self):
+        """Get the current bet"""
+        return self.__current_bet
+
+    def set_current_bet(self, bet):
+        """Set the current bet"""
+        self.__current_bet = bet
+
+    def start_new_round(self):
+        """Start a new round - roll dice for all players"""
+        self.__round_active = True
+        for player in self.__players:
+            player.play()
+
+    def is_round_active(self):
+        """Check if a round is currently active"""
+        return self.__round_active
+
+    def next_betting_player(self):
+        """Move to the next betting player"""
+        self.__current_betting_player_index = (self.__current_betting_player_index + 1) % len(self.__players)
+
+    def count_dice_for_bet(self, value):
+        count = 0
+        palepico = self.is_palepico_mode()
+
+        for p in self.__players:
+            count += p.get_goblet().count_value(value)
+            if not palepico and value != 1:
+                count += p.get_goblet().count_value(1)
+
+        return count
+
+    def end_round(self):
+        self.__current_bet = None
+        self.__round_active = False
+
+        players_alive = [p for p in self.__players if p.get_goblet_length() > 0]
+        game_over = len(players_alive) == 1
+        winner = players_alive[0] if game_over else None
+
+        return game_over, winner
+
+    def no_active_bet_result(self):
+        return {
+            "loser": None,
+            "count": 0,
+            "expected": 0,
+            "message": "Aucun pari actif!",
+            "game_over": False,
+            "winner": None
+        }
+
+    def resolve_dodo(self):
+        """Resolve a Dodo call"""
+        if self.__current_bet is None:
+            return self.no_active_bet_result()
+
+        value = self.__current_bet.get_value()
+        expected_count = self.__current_bet.get_quantity()
+        count = self.count_dice_for_bet(value)
+
+        dodo_caller_index = self.__current_betting_player_index
+        last_bettor_index = (dodo_caller_index - 1) % len(self.__players)
+
+        dodo_caller = self.__players[dodo_caller_index]
+        last_bettor = self.__players[last_bettor_index]
+
+        if count < expected_count:
+            loser = last_bettor
+            loser.lost()
+            self.__current_betting_player_index = last_bettor_index
+            message = f"{loser.get_name()} perd! Il y avait {count} dé(s) au lieu de {expected_count}"
+        else:
+            loser = dodo_caller
+            loser.lost()
+            message = f"{loser.get_name()} perd! Il y avait {count} dé(s), le pari était juste!"
+
+        game_over, winner = self.end_round()
+
+        return {
+            "loser": loser,
+            "count": count,
+            "expected": expected_count,
+            "message": message,
+            "game_over": game_over,
+            "winner": winner
+        }
+
+    def resolve_tout_pile(self):
+        """Resolve a Tout pile call"""
+        if self.__current_bet is None:
+            return self.no_active_bet_result()
+
+        value = self.__current_bet.get_value()
+        expected_count = self.__current_bet.get_quantity()
+        count = self.count_dice_for_bet(value)
+
+        tout_pile_caller_index = self.__current_betting_player_index
+        last_bettor_index = (tout_pile_caller_index - 1) % len(self.__players)
+
+        tout_pile_caller = self.__players[tout_pile_caller_index]
+        last_bettor = self.__players[last_bettor_index]
+
+        # Exact match required
+        if count == expected_count:
+            loser = last_bettor
+            loser.lost()
+            self.__current_betting_player_index = last_bettor_index
+            message = (f"TOUT PILE réussi ! Exactement {count} dé(s). {last_bettor.get_name()} perd !")
+        else:
+            loser = tout_pile_caller
+            loser.lost()
+            message = (f"TOUT PILE raté ! Il y avait {count} dé(s) au lieu de {expected_count}. {tout_pile_caller.get_name()} perd !")
+
+        game_over, winner = self.end_round()
+
+        return {
+            "loser": loser,
+            "count": count,
+            "expected": expected_count,
+            "message": message,
+            "game_over": game_over,
+            "winner": winner
+        }
+
+    def get_all_dice_values(self):
+        """
+        Get all dice values from all players (for showing after DODO/TOUT PILE)
+        Returns a dict: {player_name: [dice_values]}
+        """
+        result = {}
+        for player in self.__players:
+            dice_list = player.get_goblet().get_content()
+            result[player.get_name()] = [dice.get_value() for dice in dice_list]
+        return result
+
+    def get_players(self):
+        """Get all players"""
+        return self.__players
+
+    # Original game_loop for console version (kept for compatibility)
     def game_loop(self):
         while True:
             print("Rolling dice for all players...")
             for player in self.__players:
                 player.play()
 
-            while not self.__dodo:
+            dodo = False
+
+            while not dodo:
                 player = self.__players[self.__current_betting_player_index]
                 print(f"It's {player}'s turn to bet.")
                 player.make_bet()
@@ -27,7 +175,7 @@ class Game:
 
                 # Gestion du "dodo"
                 if bet == "dodo":
-                    self.__dodo = True
+                    dodo = True
                     print(f"{player} has called dodo!")
                 else:
                     # Vérifier si le pari est valide avec is_valid_raise
@@ -40,47 +188,13 @@ class Game:
                             self.__players)
                     else:
                         print(f"Invalid bet! Please try again.")
-                        # Le joueur doit refaire son pari
 
             # Résolution du DODO
-            value = self.__current_bet.get_value()
-            count = 0
-            palepico = self.is_palepico_mode()
+            result = self.resolve_dodo()
+            print(result["message"])
 
-            # Compter les dés de la valeur pariée
-            for p in self.__players:
-                count += p.get_goblet().count_value(value)
-                # Les pacos (1) comptent comme joker sauf en palepico ou si on parie sur les pacos
-                if not palepico and value != 1:
-                    count += p.get_goblet().count_value(1)
-
-            print(f"\nTotal count of dice with value {value}: {count}")
-
-            # Déterminer qui a fait le dernier pari
-            dodo_caller_index = self.__current_betting_player_index
-            last_bettor_index = (self.__current_betting_player_index - 1) % len(self.__players)
-            last_bettor = self.__players[last_bettor_index]
-
-            print(f"The bet was {last_bettor.bet}.\n")
-
-            if count < last_bettor.bet.get_quantity():
-                # Le parieur perd
-                print(f"{last_bettor} loses the round!")
-                last_bettor.lost()
-                self.__current_betting_player_index = last_bettor_index
-            else:
-                # Celui qui a appelé DODO perd
-                print(f"{self.__players[dodo_caller_index]} loses the round!")
-                self.__players[dodo_caller_index].lost()
-
-            # Réinitialiser pour le prochain tour
-            self.__dodo = False
-            self.__current_bet = None
-
-            # Vérifier si des joueurs sont éliminés
-            players_alive = [p for p in self.__players if p.get_goblet_length() > 0]
-            if len(players_alive) == 1:
-                print(f"\n {players_alive[0]} wins the game! ")
+            if result["game_over"]:
+                print(f"\n {result['winner'].get_name()} wins the game! ")
                 break
 
             print("\n" + "=" * 50)
