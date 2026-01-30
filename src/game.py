@@ -25,6 +25,7 @@ class Game:
         """Set the current bet"""
         self.__current_bet = bet
 
+
     def start_new_round(self):
         """Start a new round - roll dice for all players"""
         self.__round_active = True

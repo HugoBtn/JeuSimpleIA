@@ -3,6 +3,7 @@ class Bet:
         self.__quantity = quantity
         self.__value = value
 
+
     def get_quantity(self):
         return self.__quantity
 

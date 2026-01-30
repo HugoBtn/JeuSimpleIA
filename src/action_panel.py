@@ -132,7 +132,6 @@ class ActionPanel(QFrame):
         self.set_player_name(player.get_name())
         self.set_player_color(player.get_color())
 
-
     def _increment_nb(self):
         """Increment the number"""
         if self.nb < 30:
