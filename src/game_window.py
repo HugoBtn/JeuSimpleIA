@@ -310,20 +310,8 @@ class GameWindow(QMainWindow):
 
     def _update_player_zones(self):
         """Update all player zones to reflect current dice counts"""
-        for i, player in enumerate(self.players):
-            # Remove old zone
-            old_zone = self.player_zones[i]
-            old_zone.setParent(None)
-
-            # Create new zone with updated dice
-            new_zone = PlayerZone(player)
-            self.player_zones[i] = new_zone
-
-            # Insert at the same position
-            left_widget = self.centralWidget().layout().itemAt(0).widget()
-            left_layout = left_widget.layout()
-            # Insert after title (index 1) and before buttons
-            left_layout.insertWidget(i + 1, new_zone)
+        for zone in self.player_zones:
+            zone.update_dice_count()
 
 
 if __name__ == "__main__":
