@@ -220,7 +220,6 @@ class ActionPanel(QFrame):
                 padding: 6px;
             }}
 
-            /* All buttons: "like before" (light background, readable text) */
             QPushButton {{
                 padding: 8px;
                 font-weight: bold;
@@ -239,12 +238,10 @@ class ActionPanel(QFrame):
                 background-color: #B3B6B7;
             }}
 
-            /* Selected action (subtle) */
             QPushButton:checked {{
                 border: 2px solid #2C3E50;
             }}
 
-            /* Validate button: same big dark button vibe as before */
             QPushButton[text="Valider"] {{
                 background-color: #34495E;
                 color: #ECF0F1;
