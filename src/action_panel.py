@@ -11,8 +11,6 @@ class ActionPanel(QFrame):
         self.setFixedWidth(280)
 
         self.player = player
-
-        # Default values
         self.nb = 1
         self.valeur = 1
 
@@ -41,6 +39,10 @@ class ActionPanel(QFrame):
         self.btn_dodo = QPushButton("Dodo")
         self.btn_tout_pile = QPushButton("Tout pile")
 
+        # (option) action buttons selectable => subtle "selected" border
+        for b in (self.btn_valeur, self.btn_dodo, self.btn_tout_pile):
+            b.setCheckable(True)
+
         self.btn_valeur.clicked.connect(self.select_bet)
         self.btn_dodo.clicked.connect(self.select_dodo)
         self.btn_tout_pile.clicked.connect(self.select_tout_pile)
@@ -48,7 +50,6 @@ class ActionPanel(QFrame):
         row_actions.addWidget(self.btn_valeur)
         row_actions.addWidget(self.btn_dodo)
         row_actions.addWidget(self.btn_tout_pile)
-
         layout.addLayout(row_actions)
 
         layout.addSpacing(12)
@@ -65,30 +66,23 @@ class ActionPanel(QFrame):
         label_nb = QLabel("Nombre :")
         label_nb.setStyleSheet("color: #2C3E50; font-weight: bold; font-size: 12px;")
 
-        btn_nb_minus = QPushButton("-")
-        btn_nb_minus.setFixedWidth(40)
-        btn_nb_minus.clicked.connect(self._decrement_nb)
+        self.btn_nb_minus = QPushButton("-")
+        self.btn_nb_minus.setFixedWidth(40)
+        self.btn_nb_minus.clicked.connect(self._decrement_nb)
 
         self.label_nb = QLabel(str(self.nb))
         self.label_nb.setAlignment(Qt.AlignCenter)
         self.label_nb.setFixedWidth(50)
-        self.label_nb.setStyleSheet("""
-            color: #2C3E50;
-            font-size: 18px;
-            font-weight: bold;
-            background-color: white;
-            border: 2px solid #95A5A6;
-            border-radius: 5px;
-        """)
+        self.label_nb.setObjectName("ValueBox")
 
-        btn_nb_plus = QPushButton("+")
-        btn_nb_plus.setFixedWidth(40)
-        btn_nb_plus.clicked.connect(self._increment_nb)
+        self.btn_nb_plus = QPushButton("+")
+        self.btn_nb_plus.setFixedWidth(40)
+        self.btn_nb_plus.clicked.connect(self._increment_nb)
 
         row_nb.addWidget(label_nb)
-        row_nb.addWidget(btn_nb_minus)
+        row_nb.addWidget(self.btn_nb_minus)
         row_nb.addWidget(self.label_nb)
-        row_nb.addWidget(btn_nb_plus)
+        row_nb.addWidget(self.btn_nb_plus)
         bet_layout.addLayout(row_nb)
 
         bet_layout.addSpacing(10)
@@ -98,44 +92,36 @@ class ActionPanel(QFrame):
         label_val = QLabel("Valeur :")
         label_val.setStyleSheet("color: #2C3E50; font-weight: bold; font-size: 12px;")
 
-        btn_val_minus = QPushButton("-")
-        btn_val_minus.setFixedWidth(40)
-        btn_val_minus.clicked.connect(self._decrement_valeur)
+        self.btn_val_minus = QPushButton("-")
+        self.btn_val_minus.setFixedWidth(40)
+        self.btn_val_minus.clicked.connect(self._decrement_valeur)
 
         self.label_valeur = QLabel(str(self.valeur))
         self.label_valeur.setAlignment(Qt.AlignCenter)
         self.label_valeur.setFixedWidth(50)
-        self.label_valeur.setStyleSheet("""
-            color: #2C3E50;
-            font-size: 18px;
-            font-weight: bold;
-            background-color: white;
-            border: 2px solid #95A5A6;
-            border-radius: 5px;
-        """)
+        self.label_valeur.setObjectName("ValueBox")
 
-        btn_val_plus = QPushButton("+")
-        btn_val_plus.setFixedWidth(40)
-        btn_val_plus.clicked.connect(self._increment_valeur)
+        self.btn_val_plus = QPushButton("+")
+        self.btn_val_plus.setFixedWidth(40)
+        self.btn_val_plus.clicked.connect(self._increment_valeur)
 
         row_val.addWidget(label_val)
-        row_val.addWidget(btn_val_minus)
+        row_val.addWidget(self.btn_val_minus)
         row_val.addWidget(self.label_valeur)
-        row_val.addWidget(btn_val_plus)
+        row_val.addWidget(self.btn_val_plus)
         bet_layout.addLayout(row_val)
 
         layout.addWidget(self.bet_widget)
-
         layout.addStretch()
 
         # --- Validate button (global validation)
         self.btn_valider = QPushButton("Valider")
         layout.addWidget(self.btn_valider)
 
-        # Base style
-        for btn in [btn_nb_minus, btn_nb_plus, btn_val_minus, btn_val_plus]:
-            btn.setStyleSheet("""background-color: #2C3E50""")
+        # Compat si ailleurs ton code utilise encore btn_valide
+        self.btn_valide = self.btn_valider
 
+        # Base style (neutral, then recolored in set_player_color)
         self.setStyleSheet("""
             QFrame {
                 border: 2px solid #95A5A6;
@@ -154,20 +140,31 @@ class ActionPanel(QFrame):
         self.bet_widget.setVisible(False)
 
     # ---- Action selection
+    def _uncheck_actions(self):
+        for b in (self.btn_valeur, self.btn_dodo, self.btn_tout_pile):
+            b.blockSignals(True)
+            b.setChecked(False)
+            b.blockSignals(False)
+
     def select_bet(self):
         self._selected_action = "bet"
+        self._uncheck_actions()
+        self.btn_valeur.setChecked(True)
         self.bet_widget.setVisible(True)
 
     def select_dodo(self):
         self._selected_action = "dodo"
+        self._uncheck_actions()
+        self.btn_dodo.setChecked(True)
         self.bet_widget.setVisible(False)
 
     def select_tout_pile(self):
         self._selected_action = "tout_pile"
+        self._uncheck_actions()
+        self.btn_tout_pile.setChecked(True)
         self.bet_widget.setVisible(False)
 
     def get_selected_action(self):
-        """Return ('bet', (nb, val)) or ('dodo', None) or ('tout_pile', None) or (None, None)."""
         if self._selected_action == "bet":
             return "bet", (self.nb, self.valeur)
         if self._selected_action in ("dodo", "tout_pile"):
@@ -179,11 +176,11 @@ class ActionPanel(QFrame):
         self.player = player
         self.set_player_name(player.get_name())
         self.set_player_color(player.get_color())
-
         self.reset_action()
 
     def reset_action(self):
         self._selected_action = None
+        self._uncheck_actions()
         self.bet_widget.setVisible(False)
         self.reset_values()
 
@@ -191,6 +188,7 @@ class ActionPanel(QFrame):
         self.player_title.setText(name)
 
     def set_player_color(self, color):
+        """Explicit button styling to avoid OS dark-blue buttons."""
         color_map = {
             "red": "rgb(220, 100, 100)",
             "blue": "rgb(100, 150, 220)",
@@ -205,12 +203,62 @@ class ActionPanel(QFrame):
                 padding: 10px;
                 background: {bg_color};
             }}
+
+            QLabel {{
+                color: #2C3E50;
+                font-weight: bold;
+                font-size: 12px;
+            }}
+
+            QLabel#ValueBox {{
+                color: #2C3E50;
+                font-size: 18px;
+                font-weight: bold;
+                background-color: white;
+                border: 2px solid #95A5A6;
+                border-radius: 5px;
+                padding: 6px;
+            }}
+
+            /* All buttons: "like before" (light background, readable text) */
             QPushButton {{
                 padding: 8px;
                 font-weight: bold;
                 font-size: 12px;
+                background-color: #ECF0F1;
+                color: #2C3E50;
+                border: 2px solid #95A5A6;
+                border-radius: 6px;
+            }}
+
+            QPushButton:hover {{
+                background-color: #D0D3D4;
+            }}
+
+            QPushButton:pressed {{
+                background-color: #B3B6B7;
+            }}
+
+            /* Selected action (subtle) */
+            QPushButton:checked {{
+                border: 2px solid #2C3E50;
+            }}
+
+            /* Validate button: same big dark button vibe as before */
+            QPushButton[text="Valider"] {{
+                background-color: #34495E;
+                color: #ECF0F1;
+                border: none;
+                border-radius: 8px;
+                padding: 10px;
+                font-size: 13px;
+            }}
+
+            QPushButton[text="Valider"]:hover {{
+                background-color: #2C3E50;
             }}
         """)
+
         self.player_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2C3E50;")
 
     # ---- +/- controls
