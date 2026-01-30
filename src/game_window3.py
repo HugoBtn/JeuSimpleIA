@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget,
 from PySide6.QtCore import Qt
 from player_zone import PlayerZone
 from player import Player
-from action_panel2 import ActionPanel
+from action_panel import ActionPanel
 import sys
 
 from src.bet import Bet
