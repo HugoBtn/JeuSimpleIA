@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt
 class ActionPanel(QFrame):
     """Action panel for a player (right side panel)"""
 
+# Constructor
     def __init__(self, player):
         super().__init__()
         self.setFrameShape(QFrame.StyledPanel)
@@ -12,7 +13,7 @@ class ActionPanel(QFrame):
 
         self.player = player
 
-        # Default values
+        # Default bet inputs
         self.nb = 1
         self.valeur = 1
 
@@ -23,10 +24,11 @@ class ActionPanel(QFrame):
         self.set_player(player)
 
     def _setup_ui(self):
+        """Build the user interface for the action panel"""
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # Player title
+        # Player title label at the top
         self.player_title = QLabel("Joueur")
         self.player_title.setAlignment(Qt.AlignCenter)
         self.player_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2C3E50;")
@@ -34,29 +36,28 @@ class ActionPanel(QFrame):
 
         layout.addSpacing(12)
 
-        # --- Action buttons row (Valeur / Dodo / Tout pile)
-        row_actions = QHBoxLayout()
-
+        # Action buttons row (Valeur / Dodo / Tout pile)
         self.btn_valeur = QPushButton("Valeur")
         self.btn_dodo = QPushButton("Dodo")
         self.btn_tout_pile = QPushButton("Tout pile")
 
-        # (option) show selected action with a subtle checked border
+        # Make action buttons checkable
         for b in (self.btn_valeur, self.btn_dodo, self.btn_tout_pile):
             b.setCheckable(True)
 
+        # Connect buttons to action their methods
         self.btn_valeur.clicked.connect(self.select_bet)
         self.btn_dodo.clicked.connect(self.select_dodo)
         self.btn_tout_pile.clicked.connect(self.select_tout_pile)
 
+        row_actions = QHBoxLayout()
         row_actions.addWidget(self.btn_valeur)
         row_actions.addWidget(self.btn_dodo)
         row_actions.addWidget(self.btn_tout_pile)
-
         layout.addLayout(row_actions)
         layout.addSpacing(12)
 
-        # --- Bet inputs container (hidden unless "Valeur" selected)
+        # Bet inputs widget (shown only if Valeur is selected)
         self.bet_widget = QWidget()
         bet_layout = QVBoxLayout()
         bet_layout.setContentsMargins(0, 0, 0, 0)
@@ -112,20 +113,17 @@ class ActionPanel(QFrame):
         row_val.addWidget(self.btn_val_plus)
         bet_layout.addLayout(row_val)
 
+        # Add bet widget to main layout
         layout.addWidget(self.bet_widget)
         layout.addStretch()
 
-        # --- Validate button (global validation)
+        # Validate button at the bottom
         self.btn_valider = QPushButton("Valider")
         layout.addWidget(self.btn_valider)
-
-        # Compat si ton code utilise encore btn_valide ailleurs
         self.btn_valide = self.btn_valider
-
-        # Hide bet inputs by default
         self.bet_widget.setVisible(False)
 
-        # ---- FORCE style for +/- buttons (robust)
+        # Step button style (dark blue) for +/- controls
         step_style = """
             QPushButton {
                 background-color: #2C3E50;
@@ -144,7 +142,7 @@ class ActionPanel(QFrame):
         self.btn_val_minus.setStyleSheet(step_style)
         self.btn_val_plus.setStyleSheet(step_style)
 
-        # Base style (panel + all other buttons)
+        # General panel and button styles
         self.setStyleSheet("""
             QFrame {
                 border: 2px solid #95A5A6;
@@ -174,7 +172,6 @@ class ActionPanel(QFrame):
             QPushButton:pressed { background-color: #B3B6B7; }
             QPushButton:checked { border: 2px solid #2C3E50; }
 
-            /* Validate button (main action) */
             QPushButton[text="Valider"] {
                 background-color: #34495E;
                 color: #ECF0F1;
@@ -186,57 +183,64 @@ class ActionPanel(QFrame):
             QPushButton[text="Valider"]:hover { background-color: #2C3E50; }
         """)
 
-    # ---- Action selection
+# Action selection
     def _uncheck_actions(self):
+        """Deselect all action buttons"""
         for b in (self.btn_valeur, self.btn_dodo, self.btn_tout_pile):
             b.blockSignals(True)
             b.setChecked(False)
             b.blockSignals(False)
 
     def select_bet(self):
+        """Select 'bet' action and show bet input"""
         self._selected_action = "bet"
         self._uncheck_actions()
         self.btn_valeur.setChecked(True)
         self.bet_widget.setVisible(True)
 
     def select_dodo(self):
+        """Select 'dodo' action and hide bet input"""
         self._selected_action = "dodo"
         self._uncheck_actions()
         self.btn_dodo.setChecked(True)
         self.bet_widget.setVisible(False)
 
     def select_tout_pile(self):
+        """Select 'tout_pile' action and hide bet input"""
         self._selected_action = "tout_pile"
         self._uncheck_actions()
         self.btn_tout_pile.setChecked(True)
         self.bet_widget.setVisible(False)
 
     def get_selected_action(self):
-        """Return ('bet', (nb, val)) or ('dodo', None) or ('tout_pile', None) or (None, None)."""
+        """Return the currently selected action and the bet values"""
         if self._selected_action == "bet":
             return "bet", (self.nb, self.valeur)
         if self._selected_action in ("dodo", "tout_pile"):
             return self._selected_action, None
         return None, None
 
-    # ---- Player updates
+# Player updates
     def set_player(self, player):
+        """Update the panel to the current active player"""
         self.player = player
         self.set_player_name(player.get_name())
         self.set_player_color(player.get_color())
         self.reset_action()
 
     def reset_action(self):
+        """Reset action selection and hide bet input"""
         self._selected_action = None
         self._uncheck_actions()
         self.bet_widget.setVisible(False)
         self.reset_values()
 
     def set_player_name(self, name):
+        """Update the player title label"""
         self.player_title.setText(name)
 
     def set_player_color(self, color):
-        """Change panel background color based on player (and keep global style)."""
+        """Update the panel background color to match the player"""
         color_map = {
             "red": "rgb(220, 100, 100)",
             "blue": "rgb(100, 150, 220)",
@@ -244,7 +248,7 @@ class ActionPanel(QFrame):
         }
         bg_color = color_map.get(color, "#ECF0F1")
 
-        # IMPORTANT: This overrides the panel background without breaking +/- direct styles
+        # Add the new style of the background
         self.setStyleSheet(self.styleSheet() + f"""
             QFrame {{
                 background: {bg_color};
@@ -256,28 +260,33 @@ class ActionPanel(QFrame):
 
         self.player_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2C3E50;")
 
-    # ---- +/- controls
+# +/- controls
     def _increment_nb(self):
+        """Increase the number input, maximum 30"""
         if self.nb < 30:
             self.nb += 1
             self.label_nb.setText(str(self.nb))
 
     def _decrement_nb(self):
+        """Decrease the number input, minimum 1"""
         if self.nb > 1:
             self.nb -= 1
             self.label_nb.setText(str(self.nb))
 
     def _increment_valeur(self):
+        """Increase the value input, maximum 6"""
         if self.valeur < 6:
             self.valeur += 1
             self.label_valeur.setText(str(self.valeur))
 
     def _decrement_valeur(self):
+        """Decrease the value input, minimum 1"""
         if self.valeur > 1:
             self.valeur -= 1
             self.label_valeur.setText(str(self.valeur))
 
     def reset_values(self):
+        """Reset both number and value inputs to defaults"""
         self.nb = 1
         self.valeur = 1
         self.label_nb.setText(str(self.nb))

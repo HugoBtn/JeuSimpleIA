@@ -1,32 +1,38 @@
 class Bet:
+    """Represents a bet in the Perudp game"""
+
+#Constructor
     def __init__(self, quantity, value):
         self.__quantity = quantity
         self.__value = value
 
-
+# Getters
     def get_quantity(self):
+        """Return the number of dice in the bet"""
         return self.__quantity
 
     def get_value(self):
+        """Retirn the dice value of the bet"""
         return self.__value
 
+# Validation
     def is_valid_raise(self, previous_bet, palepico=False):
-        """Valid = Increase quantity or same quantity but increase value"""
-        # Check the value
+        """Check if this bet is valid compared to the previous one"""
+
+        # Number validation
         if self.__value < 1 or self.__value > 6:
             return False
         if self.__quantity < 1:
             return False
 
-        # First bet
+        # First bet of the round
         if previous_bet is None:
             return True
 
         previous_quantity = previous_bet.get_quantity()
         previous_value = previous_bet.get_value()
 
-        # PALEPICO MODE: Strict Rules
-        # Only increase the quantity, not change the value
+        # Palepico mode : same value, higher quantity
         if palepico:
             if self.__value != previous_value:
                 return False
@@ -34,8 +40,7 @@ class Bet:
                 return False
             return True
 
-        # SPECIAL RULE: From normal to PACO
-        # PACOs count as half
+        # Normal -> Paco
         if previous_value != 1 and self.__value == 1:
             # At least ceil(previous_quantity / 2)
             import math
@@ -45,25 +50,25 @@ class Bet:
             else:
                 return False
 
-        # SPECIAL RULE: From PACO to normal
-        # At least (quantity_pacos * 2) + 1
+        # Paco -> Normal
         if previous_value == 1 and self.__value != 1:
+            # At least (quantity_pacos * 2) + 1
             min_quantity = previous_quantity * 2 + 1
             if self.__quantity >= min_quantity:
                 return True
             else:
                 return False
 
-        # NORMAL RULES
-        # Increase the quantity
+        # Standard Rules
+            # Increase the quantity
         if self.__quantity > previous_quantity:
             return True
 
-        # Same quantity but increase the value
+            # Same quantity but increase the value
         if self.__quantity == previous_quantity and self.__value > previous_value:
             return True
 
-        # Invalid bet
+            # Invalid bet
         return False
 
     def __str__(self):

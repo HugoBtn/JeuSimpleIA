@@ -6,6 +6,7 @@ from dice_widget import DiceWidget
 class PlayerZone(QWidget):
     """Zone for a player with their dice"""
 
+# Constructor
     def __init__(self, player):
         super().__init__()
         self.player = player
@@ -37,6 +38,7 @@ class PlayerZone(QWidget):
         # Hide dice at start
         self.hide_dice()
 
+# Dice management
     def _create_dice_widgets(self):
         """Create dice widgets based on current player goblet"""
         # Clear existing widgets
@@ -61,6 +63,7 @@ class PlayerZone(QWidget):
         # Update values
         self.show_dice()
 
+# Visibility
     def hide_dice(self):
         """Hide dice values (show as blank)"""
         for widget in self.dice_widgets:

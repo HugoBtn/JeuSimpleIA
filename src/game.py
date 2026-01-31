@@ -3,55 +3,56 @@ from bet import Bet
 
 
 class Game:
+    """Core game logic for Perudo."""
+
+# Constructor
     def __init__(self, players: list[Player]):
         self.__players = players
         self.__current_betting_player_index = 0
         self.__current_bet = None
         self.__round_active = False
 
-    def is_palepico_mode(self):
-        """Check if a player has only one dice left"""
-        return any(p.get_goblet_length() == 1 for p in self.__players)
+# Getters
+    def get_players(self):
+        """Return the list of all the players"""
+        return self.__players
 
     def get_current_player_index(self):
-        """Get the index of the current betting player"""
+        """Return the index of the current betting player"""
         return self.__current_betting_player_index
 
     def get_current_bet(self):
-        """Get the current bet"""
+        """Return the current bet"""
         return self.__current_bet
 
-    def set_current_bet(self, bet):
-        """Set the current bet"""
-        self.__current_bet = bet
+    def get_all_dice_values(self):
+        """Return a dictionnary with all dice values"""
+        result = {}
+        for player in self.__players:
+            dice_list = player.get_goblet().get_content()
+            result[player.get_name()] = [dice.get_value() for dice in dice_list]
+        return result
 
+# Game state
+    def is_palepico_mode(self):
+        """Check if the fame is in Palepico mode
 
+        Palepico mode : actibe when at least a player has only one dice left"""
+        return any(p.get_goblet_length() == 1 for p in self.__players)
+
+    def is_round_active(self):
+        """Return True if a round is currently active"""
+        return self.__round_active
+
+# Round
     def start_new_round(self):
-        """Start a new round - roll dice for all players"""
+        """Start a new round by rolling dice for all players"""
         self.__round_active = True
         for player in self.__players:
             player.play()
 
-    def is_round_active(self):
-        """Check if a round is currently active"""
-        return self.__round_active
-
-    def next_betting_player(self):
-        """Move to the next betting player"""
-        self.__current_betting_player_index = (self.__current_betting_player_index + 1) % len(self.__players)
-
-    def count_dice_for_bet(self, value):
-        count = 0
-        palepico = self.is_palepico_mode()
-
-        for p in self.__players:
-            count += p.get_goblet().count_value(value)
-            if not palepico and value != 1:
-                count += p.get_goblet().count_value(1)
-
-        return count
-
     def end_round(self):
+        """End the current round, reset bet, check for game over and return if there is a winner"""
         self.__current_bet = None
         self.__round_active = False
 
@@ -61,7 +62,35 @@ class Game:
 
         return game_over, winner
 
+# Betting logic
+    def set_current_bet(self, bet):
+        """Set the current bet"""
+        self.__current_bet = bet
+
+    def next_betting_player(self):
+        """Move to the next betting player"""
+        self.__current_betting_player_index = (self.__current_betting_player_index + 1) % len(self.__players)
+
+    def count_dice_for_bet(self, value):
+        """Count total dice of the value in all players
+
+        Rules :
+        - In normal mode, PACO (1) counts as a wildcard for all values
+        - In Palepico mode, PACO is not a wildcard"""
+        count = 0
+        palepico = self.is_palepico_mode()
+
+        for p in self.__players:
+            count += p.get_goblet().count_value(value)
+
+            if not palepico and value != 1:
+                count += p.get_goblet().count_value(1)
+
+        return count
+
+# Resolution
     def no_active_bet_result(self):
+        """Return dictionnary when no bet is active"""
         return {
             "loser": None,
             "count": 0,
@@ -72,7 +101,11 @@ class Game:
         }
 
     def resolve_dodo(self):
-        """Resolve a Dodo call"""
+        """Resolve a Dodo call
+
+        Rules :
+        - If the dice count is lower than the bet, the last bettor loses
+        - If not, the Dodo caller loses"""
         if self.__current_bet is None:
             return self.no_active_bet_result()
 
@@ -108,7 +141,11 @@ class Game:
         }
 
     def resolve_tout_pile(self):
-        """Resolve a Tout pile call"""
+        """Resolve a Tout pile call
+
+        Rules :
+        -If the count matches exactly, the last bettor loses
+        - If not, the caller loses"""
         if self.__current_bet is None:
             return self.no_active_bet_result()
 
@@ -118,20 +155,18 @@ class Game:
 
         tout_pile_caller_index = self.__current_betting_player_index
         last_bettor_index = (tout_pile_caller_index - 1) % len(self.__players)
-
         tout_pile_caller = self.__players[tout_pile_caller_index]
         last_bettor = self.__players[last_bettor_index]
 
-        # Exact match required
         if count == expected_count:
             loser = last_bettor
             loser.lost()
             self.__current_betting_player_index = last_bettor_index
-            message = (f"TOUT PILE réussi ! Exactement {count} dé(s). {last_bettor.get_name()} perd !")
+            message = (f"Tout pile réussi ! Exactement {count} dé(s). {last_bettor.get_name()} perd !")
         else:
             loser = tout_pile_caller
             loser.lost()
-            message = (f"TOUT PILE raté ! Il y avait {count} dé(s) au lieu de {expected_count}. {tout_pile_caller.get_name()} perd !")
+            message = (f"Tout pile raté ! Il y avait {count} dé(s) au lieu de {expected_count}. {tout_pile_caller.get_name()} perd !")
 
         game_over, winner = self.end_round()
 
@@ -144,22 +179,7 @@ class Game:
             "winner": winner
         }
 
-    def get_all_dice_values(self):
-        """
-        Get all dice values from all players (for showing after DODO/TOUT PILE)
-        Returns a dict: {player_name: [dice_values]}
-        """
-        result = {}
-        for player in self.__players:
-            dice_list = player.get_goblet().get_content()
-            result[player.get_name()] = [dice.get_value() for dice in dice_list]
-        return result
-
-    def get_players(self):
-        """Get all players"""
-        return self.__players
-
-    # Original game_loop for console version (kept for compatibility)
+# Game loop
     def game_loop(self):
         while True:
             print("Rolling dice for all players...")
@@ -167,21 +187,17 @@ class Game:
                 player.play()
 
             dodo = False
-
             while not dodo:
                 player = self.__players[self.__current_betting_player_index]
                 print(f"It's {player}'s turn to bet.")
                 player.make_bet()
                 bet = player.bet
 
-                # Gestion du "dodo"
                 if bet == "dodo":
                     dodo = True
                     print(f"{player} has called dodo!")
                 else:
-                    # Vérifier si le pari est valide avec is_valid_raise
                     palepico = self.is_palepico_mode()
-
                     if bet.is_valid_raise(self.__current_bet, palepico=palepico):
                         self.__current_bet = bet
                         print(f"Bet accepted: {bet}")
@@ -190,7 +206,7 @@ class Game:
                     else:
                         print(f"Invalid bet! Please try again.")
 
-            # Résolution du DODO
+            # Resolve Dodo
             result = self.resolve_dodo()
             print(result["message"])
 
@@ -204,6 +220,7 @@ class Game:
 
 
 if __name__ == "__main__":
+    # Example usage with two players
     players = [Player("Alice", "purple"), Player("Bob", "red")]
     game = Game(players)
     game.game_loop()

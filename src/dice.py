@@ -1,18 +1,25 @@
 from random import randint
 
-
 class Dice:
+    """Represents a dice with a color and a value"""
+
+# Constructor
     def __init__(self, color="white"):
         self.__color = color
         self.__value = randint(1, 6)
-    
+
+# Getters
     def get_value(self):
+        """Return the current value of the dice"""
         return self.__value
 
     def get_color(self):
+        """Return the color of the dice"""
         return self.__color
 
+# Actions
     def roll(self):
+        """Roll the dice and update its value"""
         self.__value = randint(1, 6)
 
     def __str__(self):
@@ -23,6 +30,7 @@ class Dice:
 
 
 if __name__ == "__main__":
+    #Example
     Dice1 = Dice()
     Dice2 = Dice()
     print(Dice1)

@@ -12,26 +12,29 @@ import sys
 class GameWindow(QMainWindow):
     """Main window for Perudo game"""
 
+# Constructor
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("Perudo")
         self.resize(1000, 600)
 
-        # Create players
+        # Initialize players
         self.players = [
             Player("Joueur 1", "purple"),
             Player("Joueur 2", "red"),
             Player("Joueur 3", "blue")
         ]
+
+        # Index of the player playing
         self.active_player = 0
 
-        # Create game logic object
+        # Create game logic
         self.game = Game(self.players)
 
         # Round state
         self.round_started = False
 
+        # User Interface
         self._setup_ui()
 
     def _setup_ui(self):
@@ -45,21 +48,21 @@ class GameWindow(QMainWindow):
         root_layout = QHBoxLayout()
         central_widget.setLayout(root_layout)
 
-        # Left part with dice
+        # Left panel : player zones and round
         left_widget = self._create_left_panel()
         root_layout.addWidget(left_widget, stretch=3)
 
-        # Right part with action panel
+        # Right panel : action panel of the player
         right_widget = self._create_right_panel()
         root_layout.addWidget(right_widget, stretch=1)
 
     def _create_left_panel(self):
-        """Create the left panel (player zones)"""
+        """Create the left panel including player zones and round controls"""
         widget = QWidget()
         layout = QVBoxLayout()
         widget.setLayout(layout)
 
-        # Title
+        # Title label
         title = QLabel(" PERUDO ")
         title.setAlignment(Qt.AlignCenter)
         title.setStyleSheet("font-size: 28px; font-weight: bold; color: #ECF0F1;")
@@ -74,7 +77,6 @@ class GameWindow(QMainWindow):
 
         # Button to start round
         buttons_layout = QHBoxLayout()
-
         self.btn_start_round = QPushButton(" Lancer le tour")
         self.btn_start_round.setStyleSheet("""
                     font-size: 14px; 
@@ -86,7 +88,6 @@ class GameWindow(QMainWindow):
                 """)
         self.btn_start_round.clicked.connect(self.start_round)
         buttons_layout.addWidget(self.btn_start_round)
-
         layout.addLayout(buttons_layout)
 
         # Current bet display
@@ -116,48 +117,46 @@ class GameWindow(QMainWindow):
         return widget
 
     def _create_right_panel(self):
-        """Create the right panel (action panel)"""
+        """Create the right panel containing the action panel"""
         widget = QWidget()
         layout = QVBoxLayout()
         widget.setLayout(layout)
 
         layout.addStretch()
 
-        # Create action panel
+        # Action panel for the current player
         self.action_panel = ActionPanel(self.players[self.active_player])
 
-        # Connect ONLY the validate button
+        # Connect only the validate button
         self.action_panel.btn_valider.clicked.connect(self.on_validate_action)
 
         layout.addWidget(self.action_panel, alignment=Qt.AlignRight)
         layout.addStretch()
-
         return widget
 
 # Dice
     def _hide_all_dice(self):
-        """Hide all players' dice"""
+        """Hide dice for all players"""
         for zone in self.player_zones:
             zone.hide_dice()
 
     def _show_active_player_dice(self):
-        """Show only the active player's dice"""
+        """Show dice only for the active player"""
         self._hide_all_dice()
         if self.round_started:
             self.player_zones[self.active_player].show_dice()
 
     def _show_all_dice(self):
-        """Show all players' dice (for resolution)"""
+        """Reveal all dice at the end of a round"""
         for zone in self.player_zones:
             zone.show_dice()
 # Round
     def start_round(self):
-        """Roll dice for all players and start the round"""
-        # Start new round in game logic
+        """Start a new round: roll dice and update UI"""
         self.game.start_new_round()
         self.round_started = True
 
-        # Update UI
+        # Update dice and bet
         self._show_active_player_dice()
         self.update_current_bet_display()
 
@@ -165,46 +164,34 @@ class GameWindow(QMainWindow):
         self.info_label.setText(f"Tour lancé ! {name}, à toi de jouer.")
 
     def next_player(self):
-        """Move to next player"""
-        # Move to next player
+        """Move to next player and update action panel and UI"""
         self.active_player = (self.active_player + 1) % len(self.players)
-
-        # Update the action panel
         current_player = self.players[self.active_player]
         self.action_panel.set_player(current_player)
-
-        # Show only active player's dice
         self._show_active_player_dice()
 
-        # Update info
         name = self.players[self.active_player].get_name()
         self.info_label.setText(f"C'est au tour de {name}")
 
     def update_current_bet_display(self):
         """Update the current bet display"""
         current_bet = self.game.get_current_bet()
-
         if current_bet is None:
             self.current_bet_label.setText("Pari actuel : Aucun")
         else:
             value = current_bet.get_value()
             value_text = "PACO" if value == 1 else f"{value}"
-
             # Add palepico warning if in palepico mode
             palepico_warning = "  [PALEPICO MODE]" if self.game.is_palepico_mode() else ""
+            self.current_bet_label.setText(f"Pari actuel : {current_bet.get_quantity()} × {value_text}{palepico_warning}")
 
-            self.current_bet_label.setText(
-                f"Pari actuel : {current_bet.get_quantity()} × {value_text}{palepico_warning}"
-            )
-
-    # Actions
+# Actions
     def on_validate_action(self):
-        """Callback when any action is validated"""
+        """Handle validation of the selected action from the action panel"""
         if not self.round_started:
             self.info_label.setText(" Lance d'abord le tour (Lancer le tour).")
             return
 
-        # Get selected action from panel
         action, bet_values = self.action_panel.get_selected_action()
         name = self.players[self.active_player].get_name()
 
@@ -212,7 +199,7 @@ class GameWindow(QMainWindow):
             self.info_label.setText(" Choisis d'abord une action : Valeur, Dodo ou Tout pile.")
             return
 
-        # Handle each action type
+        # Action types
         if action == "bet":
             self._handle_bet(bet_values, name)
         elif action == "dodo":
@@ -221,82 +208,58 @@ class GameWindow(QMainWindow):
             self._handle_tout_pile(name)
 
     def _handle_bet(self, bet_values, name):
-        """Handle a bet action"""
+        """Process a bet action, validate it, update game state and UI."""
         nombre, valeur = bet_values
         new_bet = Bet(nombre, valeur)
-
-        # Check if in palepico mode
         palepico = self.game.is_palepico_mode()
         current_bet = self.game.get_current_bet()
 
-        # Validate the bet using Bet's is_valid_raise method
         if new_bet.is_valid_raise(current_bet, palepico=palepico):
-            # Save the bet in game
+            # Save and display thr bet
             self.game.set_current_bet(new_bet)
             self.players[self.active_player].bet = new_bet
-
-            # Update display
             value_text = "PACO" if valeur == 1 else f"valeur {valeur}"
             self.info_label.setText(f" {name} parie : {nombre} × {value_text}")
             self.update_current_bet_display()
 
-            # Reset action selection for next player
+            # Prepare for the next player
             self.action_panel.reset_action()
-
-            # Update game's betting player index
-            self.game.next_betting_player()
-
-            # Move to next player in UI
-            self.next_player()
+            self.game.next_betting_player() # Update game's betting player index
+            self.next_player() # Move to next player in UI
         else:
-            # Invalid bet - generate error message
+            # Invalid bet : error message
             if current_bet is None:
                 self.info_label.setText(" Erreur dans le pari")
             else:
                 current_val_text = "PACO" if current_bet.get_value() == 1 else f"val. {current_bet.get_value()}"
-
                 if palepico:
                     error_msg = f" PALEPICO! Même valeur seulement. Actuel: {current_bet.get_quantity()}× {current_val_text}"
                 elif current_bet.get_value() == 1 or valeur == 1:
                     error_msg = f" Règle PACO non respectée! Actuel: {current_bet.get_quantity()}× {current_val_text}"
                 else:
                     error_msg = f" Pari trop bas! Doit être > {current_bet.get_quantity()}× {current_val_text}"
-
                 self.info_label.setText(error_msg)
 
     def _handle_action(self, name, call_name, resolve_function):
-        """
-        Handler for Dodo and Tout pile
-        """
-        # Check if there's a bet to challenge
+        """Handler for Dodo and Tout pile to avoid code duplication"""
         if self.game.get_current_bet() is None:
             self.info_label.setText(f"Aucun pari actif!")
             return
 
-        # Show all dice before resolution
+        # Reveal dice and resolve action
         self._show_all_dice()
-
-        # Resolve call (DODO or TOUT PILE)
         result = resolve_function()
 
-        # Show result
-        self.info_label.setText(
-            f" {name} a appelé {call_name.upper()}! {result['message']}"
-        )
-
-        # Update UI
+        # Display result and update UI
+        self.info_label.setText(f" {name} a appelé {call_name.upper()}! {result['message']}")
         self.update_current_bet_display()
         self._update_player_zones()
         self.action_panel.reset_action()
 
-        # End game?
+        # End game
         if result["game_over"]:
             winner_name = result["winner"].get_name()
-            QMessageBox.information(
-                self,
-                "Partie terminée",
-                f" {winner_name} remporte la partie!"
-            )
+            QMessageBox.information(self,"Partie terminée",f" {winner_name} remporte la partie!")
             self.action_panel.setEnabled(False)
             self.btn_start_round.setEnabled(False)
             return
@@ -304,21 +267,21 @@ class GameWindow(QMainWindow):
         # Prepare next round
         self.active_player = self.game.get_current_player_index()
         self.action_panel.set_player(self.players[self.active_player])
-
         self.round_started = False
         self._hide_all_dice()
 
     def _handle_dodo(self, name):
+        """Handle 'Dodo' action"""
         self._handle_action(name=name, call_name="dodo", resolve_function=self.game.resolve_dodo)
 
     def _handle_tout_pile(self, name):
+        """Handle 'Tout pile' action"""
         self._handle_action(name=name,call_name="tout pile",resolve_function=self.game.resolve_tout_pile)
 
     def _update_player_zones(self):
-        """Update all player zones to reflect current dice counts"""
+        """Update all player zones with their current dice"""
         for zone in self.player_zones:
             zone.update_dice_count()
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
