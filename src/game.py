@@ -13,10 +13,6 @@ class Game:
         self.__round_active = False
 
 # Getters
-    def get_players(self):
-        """Return the list of all the players"""
-        return self.__players
-
     def get_current_player_index(self):
         """Return the index of the current betting player"""
         return self.__current_betting_player_index
@@ -35,14 +31,8 @@ class Game:
 
 # Game state
     def is_palepico_mode(self):
-        """Check if the fame is in Palepico mode
-
-        Palepico mode : actibe when at least a player has only one dice left"""
-        return any(p.get_goblet_length() == 1 for p in self.__players)
-
-    def is_round_active(self):
-        """Return True if a round is currently active"""
-        return self.__round_active
+        """Check if the fame is in Palepico mode"""
+        return any(p.palepico() for p in self.__players)
 
 # Round
     def start_new_round(self):
@@ -71,7 +61,7 @@ class Game:
         """Move to the next betting player"""
         self.__current_betting_player_index = (self.__current_betting_player_index + 1) % len(self.__players)
 
-    def count_dice_for_bet(self, value):
+    def _count_dice_for_bet(self, value):
         """Count total dice of the value in all players
 
         Rules :
@@ -89,7 +79,7 @@ class Game:
         return count
 
 # Resolution
-    def no_active_bet_result(self):
+    def _no_active_bet_result(self):
         """Return dictionnary when no bet is active"""
         return {
             "loser": None,
@@ -144,8 +134,8 @@ class Game:
         """Resolve a Tout pile call
 
         Rules :
-        -If the count matches exactly, the last bettor loses
-        - If not, the caller loses"""
+        -If the count matches exactly, the caller wins a dice
+        - If not, the caller loses a dice"""
         if self.__current_bet is None:
             return self.no_active_bet_result()
 
@@ -154,15 +144,13 @@ class Game:
         count = self.count_dice_for_bet(value)
 
         tout_pile_caller_index = self.__current_betting_player_index
-        last_bettor_index = (tout_pile_caller_index - 1) % len(self.__players)
         tout_pile_caller = self.__players[tout_pile_caller_index]
-        last_bettor = self.__players[last_bettor_index]
 
         if count == expected_count:
-            loser = last_bettor
-            loser.lost()
-            self.__current_betting_player_index = last_bettor_index
-            message = (f"Tout pile réussi ! Exactement {count} dé(s). {last_bettor.get_name()} perd !")
+            tout_pile_caller.won()
+            self.__current_betting_player_index = tout_pile_caller_index
+            message = (f"Tout pile réussi ! Exactement {count} dé(s). {tout_pile_caller.get_name()} gagne un dé !")
+            loser = None
         else:
             loser = tout_pile_caller
             loser.lost()

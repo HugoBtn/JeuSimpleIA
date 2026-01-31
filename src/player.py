@@ -1,5 +1,7 @@
 from goblet import Goblet
 from bet import Bet
+from src.dice import Dice
+
 
 class Player:
     """Represents a player in the Perudo game"""
@@ -35,11 +37,21 @@ class Player:
         self.__goblet.shake()
 
     def lost(self):
-        """Player loses a die"""
+        """Player loses a dice"""
         if len(self.__goblet.get_content()) > 0:
             self.__goblet.remove_dice()
         if not self.__palepico and len(self.__goblet.get_content()) == 1:
             self.__palepico = True
+
+    def won(self):
+        """Player wins a dice (maximum 6)"""
+        if len(self.__goblet.get_content())<6:
+            new_dice = Dice(self.__color)
+            self.__goblet.add_dice(new_dice)
+        # Exit palepico mode if a player has now more than one dice
+        if self.__palepico and len(self.__goblet.get_content())> 1:
+            self.__palepico = False
+
 
 # Game state
     def palepico(self):

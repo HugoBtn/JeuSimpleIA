@@ -1,5 +1,3 @@
-from goblet import Goblet
-from dice import Dice
 from player import Player
 
 def main():
