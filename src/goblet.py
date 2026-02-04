@@ -4,10 +4,10 @@ class Goblet:
     """Represents a goblet with a set of dice"""
 
 # Constructor
-    def __init__(self, color, capacity = 5):
+    def __init__(self, color, initial_dice = 5):
         self.__color = color
-        self.__size = capacity
-        self.__content = [Dice(color) for _ in range(capacity)]
+        self.__size = 6
+        self.__content = [Dice(color) for _ in range(initial_dice)]
 
 # Getters
     def get_color(self):
