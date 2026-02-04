@@ -26,10 +26,6 @@ class Game:
     def __normalize_current_player_index(self):
         self.__current_betting_player_index = self.__find_next_alive_index(self.__current_betting_player_index)
 
-    def is_palepico_mode(self):
-        """Check if a player has only one dice left"""
-        return any(p.get_goblet_length() == 1 for p in self.__players)
-
 # Getters
     def get_current_player_index(self):
         """Return the index of the current betting player"""
@@ -49,10 +45,18 @@ class Game:
             result[player.get_name()] = [dice.get_value() for dice in dice_list]
         return result
 
+    def get_players(self):
+        """Return the list of players"""
+        return self.__players
+
 # Game state
     def is_palepico_mode(self):
         """Check if the fame is in Palepico mode"""
         return any(p.palepico() for p in self.__players)
+
+    def is_round_active(self):
+        """Check if a round is currently active"""
+        return self.__round_active
 
 # Round
     def start_new_round(self):
