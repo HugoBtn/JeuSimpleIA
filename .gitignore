@@ -20,3 +20,5 @@ build/
 Thumbs.db
 *.swp
 *.swo
+
+venv

@@ -1,6 +1,6 @@
 from goblet import Goblet
 from bet import Bet
-from src.dice import Dice
+from dice import Dice
 
 
 class Player:
