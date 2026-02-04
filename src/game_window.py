@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget,
                                QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from player_zone import PlayerZone
 from player import Player
 from action_panel import ActionPanel
@@ -8,31 +8,97 @@ from bet import Bet
 from game import Game
 import sys
 
+try:
+    from bot_player import BotPlayer
+except Exception:
+    BotPlayer = None
+
 
 class GameWindow(QMainWindow):
     """Main window for Perudo game"""
 
-    def __init__(self):
+    def __init__(self, players: list[Player] | None = None, auto_start_rounds: bool = True):
         super().__init__()
 
         self.setWindowTitle("Perudo")
         self.resize(1000, 600)
 
         # Create players
-        self.players = [
-            Player("Joueur 1", "purple"),
-            Player("Joueur 2", "red"),
-            Player("Joueur 3", "blue")
-        ]
-        self.active_player = 0
+        if players is None:
+            self.players = [
+                Player("Joueur 1", "purple"),
+                Player("Joueur 2", "red"),
+                Player("Joueur 3", "blue")
+            ]
+        else:
+            self.players = players
 
         # Create game logic object
         self.game = Game(self.players)
 
+        for p in self.players:
+            if BotPlayer is not None and isinstance(p, BotPlayer):
+                p.attach_game(self.game)
+
+        self.active_player = self.game.get_current_player_index()
+
         # Round state
         self.round_started = False
+        self.auto_start_rounds = auto_start_rounds
 
         self._setup_ui()
+
+        if self.auto_start_rounds:
+            QTimer.singleShot(0, self.start_round)
+
+    def _is_bot(self, player: Player) -> bool:
+        return BotPlayer is not None and isinstance(player, BotPlayer)
+
+    def _update_turn_ui(self):
+        current_player = self.players[self.active_player]
+        self.action_panel.set_player(current_player)
+        self.action_panel.setEnabled(not self._is_bot(current_player))
+        self._show_active_player_dice()
+
+        name = current_player.get_name()
+        if self._is_bot(current_player):
+            self.info_label.setText(f"C'est au tour de {name} (bot)...")
+        else:
+            self.info_label.setText(f"C'est au tour de {name}")
+
+    def _maybe_schedule_bot_turn(self):
+        if not self.round_started:
+            return
+        current_player = self.players[self.active_player]
+        if not self._is_bot(current_player):
+            return
+        QTimer.singleShot(700, self._play_bot_turn)
+
+    def _play_bot_turn(self):
+        if not self.round_started:
+            return
+        if not self.game.is_round_active():
+            return
+
+        player = self.players[self.active_player]
+        if not self._is_bot(player):
+            return
+
+        player.make_bet()
+        bet = player.bet
+        name = player.get_name()
+
+        if bet == "dodo":
+            self._handle_dodo(name)
+            return
+        if bet == "tout_pile":
+            self._handle_tout_pile(name)
+            return
+        if isinstance(bet, Bet):
+            self._handle_bet((bet.get_quantity(), bet.get_value()), name)
+            return
+
+        self._handle_dodo(name)
 
     def _setup_ui(self):
         """Build the interface"""
@@ -134,7 +200,7 @@ class GameWindow(QMainWindow):
 
         return widget
 
-# Dice
+    # Dice
     def _hide_all_dice(self):
         """Hide all players' dice"""
         for zone in self.player_zones:
@@ -144,41 +210,41 @@ class GameWindow(QMainWindow):
         """Show only the active player's dice"""
         self._hide_all_dice()
         if self.round_started:
-            self.player_zones[self.active_player].show_dice()
+            current_player = self.players[self.active_player]
+            if not self._is_bot(current_player):
+                self.player_zones[self.active_player].show_dice()
 
     def _show_all_dice(self):
         """Show all players' dice (for resolution)"""
         for zone in self.player_zones:
             zone.show_dice()
-# Round
+
+    # Round
     def start_round(self):
         """Roll dice for all players and start the round"""
         # Start new round in game logic
         self.game.start_new_round()
         self.round_started = True
 
+        self.active_player = self.game.get_current_player_index()
+
         # Update UI
-        self._show_active_player_dice()
+        self._update_turn_ui()
         self.update_current_bet_display()
 
-        name = self.players[self.active_player].get_name()
-        self.info_label.setText(f"Tour lancé ! {name}, à toi de jouer.")
+        current_player = self.players[self.active_player]
+        name = current_player.get_name()
+        if self._is_bot(current_player):
+            self.info_label.setText(f"Tour lancé ! {name} (bot) joue...")
+            self._maybe_schedule_bot_turn()
+        else:
+            self.info_label.setText(f"Tour lancé ! {name}, à toi de jouer.")
 
     def next_player(self):
         """Move to next player"""
-        # Move to next player
-        self.active_player = (self.active_player + 1) % len(self.players)
-
-        # Update the action panel
-        current_player = self.players[self.active_player]
-        self.action_panel.set_player(current_player)
-
-        # Show only active player's dice
-        self._show_active_player_dice()
-
-        # Update info
-        name = self.players[self.active_player].get_name()
-        self.info_label.setText(f"C'est au tour de {name}")
+        self.active_player = self.game.get_current_player_index()
+        self._update_turn_ui()
+        self._maybe_schedule_bot_turn()
 
     def update_current_bet_display(self):
         """Update the current bet display"""
@@ -202,6 +268,9 @@ class GameWindow(QMainWindow):
         """Callback when any action is validated"""
         if not self.round_started:
             self.info_label.setText(" Lance d'abord le tour (Lancer le tour).")
+            return
+
+        if self._is_bot(self.players[self.active_player]):
             return
 
         # Get selected action from panel
@@ -303,16 +372,19 @@ class GameWindow(QMainWindow):
 
         # Prepare next round
         self.active_player = self.game.get_current_player_index()
-        self.action_panel.set_player(self.players[self.active_player])
+        self._update_turn_ui()
 
         self.round_started = False
         self._hide_all_dice()
+
+        if self.auto_start_rounds:
+            QTimer.singleShot(2000, self.start_round)
 
     def _handle_dodo(self, name):
         self._handle_action(name=name, call_name="dodo", resolve_function=self.game.resolve_dodo)
 
     def _handle_tout_pile(self, name):
-        self._handle_action(name=name,call_name="tout pile",resolve_function=self.game.resolve_tout_pile)
+        self._handle_action(name=name, call_name="tout pile", resolve_function=self.game.resolve_tout_pile)
 
     def _update_player_zones(self):
         """Update all player zones to reflect current dice counts"""

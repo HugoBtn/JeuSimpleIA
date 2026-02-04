@@ -9,12 +9,27 @@ class Game:
         self.__current_bet = None
         self.__round_active = False
 
+        self.__current_betting_player_index = self.__find_next_alive_index(self.__current_betting_player_index)
+
+    def __find_next_alive_index(self, start_index: int) -> int:
+        if not self.__players:
+            return 0
+        for i in range(len(self.__players)):
+            idx = (start_index + i) % len(self.__players)
+            if self.__players[idx].get_goblet_length() > 0:
+                return idx
+        return start_index
+
+    def __normalize_current_player_index(self):
+        self.__current_betting_player_index = self.__find_next_alive_index(self.__current_betting_player_index)
+
     def is_palepico_mode(self):
         """Check if a player has only one dice left"""
         return any(p.get_goblet_length() == 1 for p in self.__players)
 
     def get_current_player_index(self):
         """Get the index of the current betting player"""
+        self.__normalize_current_player_index()
         return self.__current_betting_player_index
 
     def get_current_bet(self):
@@ -25,12 +40,14 @@ class Game:
         """Set the current bet"""
         self.__current_bet = bet
 
-
     def start_new_round(self):
         """Start a new round - roll dice for all players"""
+        self.__current_bet = None
         self.__round_active = True
         for player in self.__players:
-            player.play()
+            if player.get_goblet_length() > 0:
+                player.play()
+        self.__normalize_current_player_index()
 
     def is_round_active(self):
         """Check if a round is currently active"""
@@ -38,7 +55,10 @@ class Game:
 
     def next_betting_player(self):
         """Move to the next betting player"""
+        if not self.__players:
+            return
         self.__current_betting_player_index = (self.__current_betting_player_index + 1) % len(self.__players)
+        self.__normalize_current_player_index()
 
     def count_dice_for_bet(self, value):
         count = 0
@@ -58,6 +78,9 @@ class Game:
         players_alive = [p for p in self.__players if p.get_goblet_length() > 0]
         game_over = len(players_alive) == 1
         winner = players_alive[0] if game_over else None
+
+        if not game_over:
+            self.__normalize_current_player_index()
 
         return game_over, winner
 
@@ -90,10 +113,12 @@ class Game:
             loser = last_bettor
             loser.lost()
             self.__current_betting_player_index = last_bettor_index
+            self.__normalize_current_player_index()
             message = f"{loser.get_name()} perd! Il y avait {count} dé(s) au lieu de {expected_count}"
         else:
             loser = dodo_caller
             loser.lost()
+            self.__normalize_current_player_index()
             message = f"{loser.get_name()} perd! Il y avait {count} dé(s), le pari était juste!"
 
         game_over, winner = self.end_round()
@@ -127,10 +152,12 @@ class Game:
             loser = last_bettor
             loser.lost()
             self.__current_betting_player_index = last_bettor_index
+            self.__normalize_current_player_index()
             message = (f"TOUT PILE réussi ! Exactement {count} dé(s). {last_bettor.get_name()} perd !")
         else:
             loser = tout_pile_caller
             loser.lost()
+            self.__normalize_current_player_index()
             message = (f"TOUT PILE raté ! Il y avait {count} dé(s) au lieu de {expected_count}. {tout_pile_caller.get_name()} perd !")
 
         game_over, winner = self.end_round()
