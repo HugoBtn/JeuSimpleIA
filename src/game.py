@@ -137,11 +137,11 @@ class Game:
         -If the count matches exactly, the caller wins a dice
         - If not, the caller loses a dice"""
         if self.__current_bet is None:
-            return self.no_active_bet_result()
+            return self._no_active_bet_result()
 
         value = self.__current_bet.get_value()
         expected_count = self.__current_bet.get_quantity()
-        count = self.count_dice_for_bet(value)
+        count = self._count_dice_for_bet(value)
 
         tout_pile_caller_index = self.__current_betting_player_index
         tout_pile_caller = self.__players[tout_pile_caller_index]
