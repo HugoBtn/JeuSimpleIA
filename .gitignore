@@ -8,14 +8,15 @@ __pycache__/
 *$py.class
 *.so
 .Python
-
-# Virtual Environment
-.venv/
-venv/
 env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
 
 # OS
 .DS_Store
 Thumbs.db
 *.swp
-EOF
+*.swo
