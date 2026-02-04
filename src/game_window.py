@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget,
                                QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from player_zone import PlayerZone
 from player import Player
 from action_panel import ActionPanel
@@ -8,22 +8,31 @@ from bet import Bet
 from game import Game
 import sys
 
+try:
+    from bot_player import BotPlayer
+except Exception:
+    BotPlayer = None
+
 
 class GameWindow(QMainWindow):
     """Main window for Perudo game"""
 
 # Constructor
-    def __init__(self):
+    def __init__(self, players: list[Player] | None = None, auto_start_rounds: bool = True):
         super().__init__()
+
         self.setWindowTitle("Perudo")
         self.resize(1000, 600)
 
-        # Initialize players
-        self.players = [
-            Player("Joueur 1", "purple"),
-            Player("Joueur 2", "red"),
-            Player("Joueur 3", "blue")
-        ]
+        # Create players
+        if players is None:
+            self.players = [
+                Player("Joueur 1", "purple"),
+                Player("Joueur 2", "red"),
+                Player("Joueur 3", "blue")
+            ]
+        else:
+            self.players = players
 
         # Index of the player playing
         self.active_player = 0
@@ -31,11 +40,70 @@ class GameWindow(QMainWindow):
         # Create game logic
         self.game = Game(self.players)
 
+        for p in self.players:
+            if BotPlayer is not None and isinstance(p, BotPlayer):
+                p.attach_game(self.game)
+
+        self.active_player = self.game.get_current_player_index()
+
         # Round state
         self.round_started = False
+        self.auto_start_rounds = auto_start_rounds
 
         # User Interface
         self._setup_ui()
+
+        if self.auto_start_rounds:
+            QTimer.singleShot(0, self.start_round)
+
+    def _is_bot(self, player: Player) -> bool:
+        return BotPlayer is not None and isinstance(player, BotPlayer)
+
+    def _update_turn_ui(self):
+        current_player = self.players[self.active_player]
+        self.action_panel.set_player(current_player)
+        self.action_panel.setEnabled(not self._is_bot(current_player))
+        self._show_active_player_dice()
+
+        name = current_player.get_name()
+        if self._is_bot(current_player):
+            self.info_label.setText(f"C'est au tour de {name} (bot)...")
+        else:
+            self.info_label.setText(f"C'est au tour de {name}")
+
+    def _maybe_schedule_bot_turn(self):
+        if not self.round_started:
+            return
+        current_player = self.players[self.active_player]
+        if not self._is_bot(current_player):
+            return
+        QTimer.singleShot(700, self._play_bot_turn)
+
+    def _play_bot_turn(self):
+        if not self.round_started:
+            return
+        if not self.game.is_round_active():
+            return
+
+        player = self.players[self.active_player]
+        if not self._is_bot(player):
+            return
+
+        player.make_bet()
+        bet = player.bet
+        name = player.get_name()
+
+        if bet == "dodo":
+            self._handle_dodo(name)
+            return
+        if bet == "tout_pile":
+            self._handle_tout_pile(name)
+            return
+        if isinstance(bet, Bet):
+            self._handle_bet((bet.get_quantity(), bet.get_value()), name)
+            return
+
+        self._handle_dodo(name)
 
     def _setup_ui(self):
         """Build the interface"""
@@ -77,6 +145,7 @@ class GameWindow(QMainWindow):
 
         # Button to start round
         buttons_layout = QHBoxLayout()
+
         self.btn_start_round = QPushButton(" Lancer le tour")
         self.btn_start_round.setStyleSheet("""
                     font-size: 14px; 
@@ -88,6 +157,7 @@ class GameWindow(QMainWindow):
                 """)
         self.btn_start_round.clicked.connect(self.start_round)
         buttons_layout.addWidget(self.btn_start_round)
+
         layout.addLayout(buttons_layout)
 
         # Current bet display
@@ -132,6 +202,7 @@ class GameWindow(QMainWindow):
 
         layout.addWidget(self.action_panel, alignment=Qt.AlignRight)
         layout.addStretch()
+
         return widget
 
 # Dice
@@ -144,7 +215,9 @@ class GameWindow(QMainWindow):
         """Show dice only for the active player"""
         self._hide_all_dice()
         if self.round_started:
-            self.player_zones[self.active_player].show_dice()
+            current_player = self.players[self.active_player]
+            if not self._is_bot(current_player):
+                self.player_zones[self.active_player].show_dice()
 
     def _show_all_dice(self):
         """Reveal all dice at the end of a round"""
@@ -158,14 +231,26 @@ class GameWindow(QMainWindow):
 
         # Update dice and bet
         self._show_active_player_dice()
+        self.active_player = self.game.get_current_player_index()
+
+        # Update UI
+        self._update_turn_ui()
         self.update_current_bet_display()
 
-        name = self.players[self.active_player].get_name()
-        self.info_label.setText(f"Tour lancé ! {name}, à toi de jouer.")
+        current_player = self.players[self.active_player]
+        name = current_player.get_name()
+        if self._is_bot(current_player):
+            self.info_label.setText(f"Tour lancé ! {name} (bot) joue...")
+            self._maybe_schedule_bot_turn()
+        else:
+            self.info_label.setText(f"Tour lancé ! {name}, à toi de jouer.")
 
     def next_player(self):
         """Move to next player and update action panel and UI"""
         self.active_player = (self.active_player + 1) % len(self.players)
+        self._update_turn_ui()
+        self._maybe_schedule_bot_turn()
+
         current_player = self.players[self.active_player]
         self.action_panel.set_player(current_player)
         self._show_active_player_dice()
@@ -176,11 +261,13 @@ class GameWindow(QMainWindow):
     def update_current_bet_display(self):
         """Update the current bet display"""
         current_bet = self.game.get_current_bet()
+
         if current_bet is None:
             self.current_bet_label.setText("Pari actuel : Aucun")
         else:
             value = current_bet.get_value()
             value_text = "PACO" if value == 1 else f"{value}"
+
             # Add palepico warning if in palepico mode
             palepico_warning = "  [PALEPICO MODE]" if self.game.is_palepico_mode() else ""
             self.current_bet_label.setText(f"Pari actuel : {current_bet.get_quantity()} × {value_text}{palepico_warning}")
@@ -192,6 +279,10 @@ class GameWindow(QMainWindow):
             self.info_label.setText(" Lance d'abord le tour (Lancer le tour).")
             return
 
+        if self._is_bot(self.players[self.active_player]):
+            return
+
+        # Get selected action from panel
         action, bet_values = self.action_panel.get_selected_action()
         name = self.players[self.active_player].get_name()
 
@@ -211,13 +302,18 @@ class GameWindow(QMainWindow):
         """Process a bet action, validate it, update game state and UI."""
         nombre, valeur = bet_values
         new_bet = Bet(nombre, valeur)
+
+        # Check if in palepico mode
         palepico = self.game.is_palepico_mode()
         current_bet = self.game.get_current_bet()
 
+        # Validate the bet using Bet's is_valid_raise method
         if new_bet.is_valid_raise(current_bet, palepico=palepico):
             # Save and display thr bet
             self.game.set_current_bet(new_bet)
             self.players[self.active_player].bet = new_bet
+
+            # Update display
             value_text = "PACO" if valeur == 1 else f"valeur {valeur}"
             self.info_label.setText(f" {name} parie : {nombre} × {value_text}")
             self.update_current_bet_display()
@@ -238,6 +334,7 @@ class GameWindow(QMainWindow):
                     error_msg = f" Règle PACO non respectée! Actuel: {current_bet.get_quantity()}× {current_val_text}"
                 else:
                     error_msg = f" Pari trop bas! Doit être > {current_bet.get_quantity()}× {current_val_text}"
+
                 self.info_label.setText(error_msg)
 
     def _handle_action(self, name, call_name, resolve_function):
@@ -248,6 +345,8 @@ class GameWindow(QMainWindow):
 
         # Reveal dice and resolve action
         self._show_all_dice()
+
+        # Resolve call (DODO or TOUT PILE)
         result = resolve_function()
 
         # Display result and update UI
@@ -270,6 +369,9 @@ class GameWindow(QMainWindow):
         self.round_started = False
         self._hide_all_dice()
 
+        if self.auto_start_rounds:
+            QTimer.singleShot(2000, self.start_round)
+
     def _handle_dodo(self, name):
         """Handle 'Dodo' action"""
         self._handle_action(name=name, call_name="dodo", resolve_function=self.game.resolve_dodo)
@@ -282,6 +384,7 @@ class GameWindow(QMainWindow):
         """Update all player zones with their current dice"""
         for zone in self.player_zones:
             zone.update_dice_count()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
