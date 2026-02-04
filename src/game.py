@@ -97,11 +97,11 @@ class Game:
         - If the dice count is lower than the bet, the last bettor loses
         - If not, the Dodo caller loses"""
         if self.__current_bet is None:
-            return self.no_active_bet_result()
+            return self._no_active_bet_result()
 
         value = self.__current_bet.get_value()
         expected_count = self.__current_bet.get_quantity()
-        count = self.count_dice_for_bet(value)
+        count = self._count_dice_for_bet(value)
 
         dodo_caller_index = self.__current_betting_player_index
         last_bettor_index = (dodo_caller_index - 1) % len(self.__players)
