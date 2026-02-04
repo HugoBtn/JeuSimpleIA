@@ -15,7 +15,7 @@ def main():
     ]
 
     app = QApplication(sys.argv)
-    window = GameWindow(players=[human] + bots, auto_start_rounds=True)
+    window = GameWindow(players=[human] + bots, auto_start_rounds=False)
     window.show()
     sys.exit(app.exec())
 

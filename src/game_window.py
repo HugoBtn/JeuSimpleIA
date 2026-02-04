@@ -77,7 +77,7 @@ class GameWindow(QMainWindow):
         current_player = self.players[self.active_player]
         if not self._is_bot(current_player):
             return
-        QTimer.singleShot(700, self._play_bot_turn)
+        QTimer.singleShot(1200, self._play_bot_turn)
 
     def _play_bot_turn(self):
         if not self.round_started:
@@ -226,6 +226,8 @@ class GameWindow(QMainWindow):
 # Round
     def start_round(self):
         """Start a new round: roll dice and update UI"""
+        self.auto_start_rounds = True
+
         self.game.start_new_round()
         self.round_started = True
 
@@ -247,7 +249,7 @@ class GameWindow(QMainWindow):
 
     def next_player(self):
         """Move to next player and update action panel and UI"""
-        self.active_player = (self.active_player + 1) % len(self.players)
+        self.active_player = self.game.get_current_player_index()
         self._update_turn_ui()
         self._maybe_schedule_bot_turn()
 
@@ -343,10 +345,11 @@ class GameWindow(QMainWindow):
             self.info_label.setText(f"Aucun pari actif!")
             return
 
-        # Reveal dice and resolve action
+        # Reveal dice
         self._show_all_dice()
+        QApplication.processEvents()
 
-        # Resolve call (DODO or TOUT PILE)
+        # Resolve call (Dodo or Tout pile)
         result = resolve_function()
 
         # Display result and update UI
@@ -363,14 +366,17 @@ class GameWindow(QMainWindow):
             self.btn_start_round.setEnabled(False)
             return
 
+            self.auto_start_rounds = False
+
+            # Prepare next round
+            QTimer.singleShot(4000, self._hide_all_dice)
+            QTimer.singleShot(4000, lambda: self.btn_start_round.setEnabled(True))
+
         # Prepare next round
         self.active_player = self.game.get_current_player_index()
         self.action_panel.set_player(self.players[self.active_player])
         self.round_started = False
         self._hide_all_dice()
-
-        if self.auto_start_rounds:
-            QTimer.singleShot(2000, self.start_round)
 
     def _handle_dodo(self, name):
         """Handle 'Dodo' action"""
