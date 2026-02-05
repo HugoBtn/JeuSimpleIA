@@ -324,7 +324,7 @@ class GameWindow(QMainWindow):
             if current_bet is None:
                 self.info_label.setText(" Erreur dans le pari")
             else:
-                current_val_text = "PACO" if current_bet.get_value() == 1 else f"val. {current_bet.get_value()}"
+                current_val_text = "PACO" if current_bet.get_value() == 1 else f"{current_bet.get_value()}"
                 if palepico:
                     error_msg = f" PALEPICO! Même valeur seulement. Actuel: {current_bet.get_quantity()}× {current_val_text}"
                 elif current_bet.get_value() == 1 or valeur == 1:
