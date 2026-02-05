@@ -14,8 +14,8 @@ class ActionPanel(QFrame):
         self.player = player
 
         # Default bet inputs
-        self.nb = 1
-        self.valeur = 1
+        self.quantity = 1
+        self.value = 1
 
         # Selected action: "bet", "dodo", "tout_pile", or None
         self._selected_action = None
@@ -37,21 +37,21 @@ class ActionPanel(QFrame):
         layout.addSpacing(12)
 
         # Action buttons row (Valeur / Dodo / Tout pile)
-        self.btn_valeur = QPushButton("Valeur")
+        self.btn_value = QPushButton("Valeur")
         self.btn_dodo = QPushButton("Dodo")
         self.btn_tout_pile = QPushButton("Tout pile")
 
         # Make action buttons checkable
-        for b in (self.btn_valeur, self.btn_dodo, self.btn_tout_pile):
+        for b in (self.btn_value, self.btn_dodo, self.btn_tout_pile):
             b.setCheckable(True)
 
         # Connect buttons to action their methods
-        self.btn_valeur.clicked.connect(self.select_bet)
+        self.btn_value.clicked.connect(self.select_bet)
         self.btn_dodo.clicked.connect(self.select_dodo)
         self.btn_tout_pile.clicked.connect(self.select_tout_pile)
 
         row_actions = QHBoxLayout()
-        row_actions.addWidget(self.btn_valeur)
+        row_actions.addWidget(self.btn_value)
         row_actions.addWidget(self.btn_dodo)
         row_actions.addWidget(self.btn_tout_pile)
         layout.addLayout(row_actions)
@@ -74,7 +74,7 @@ class ActionPanel(QFrame):
         self.btn_nb_minus.setFixedWidth(40)
         self.btn_nb_minus.clicked.connect(self._decrement_nb)
 
-        self.label_nb = QLabel(str(self.nb))
+        self.label_nb = QLabel(str(self.quantity))
         self.label_nb.setAlignment(Qt.AlignCenter)
         self.label_nb.setFixedWidth(50)
         self.label_nb.setObjectName("ValueBox")
@@ -96,16 +96,16 @@ class ActionPanel(QFrame):
 
         self.btn_val_minus = QPushButton("-")
         self.btn_val_minus.setFixedWidth(40)
-        self.btn_val_minus.clicked.connect(self._decrement_valeur)
+        self.btn_val_minus.clicked.connect(self._decrement_value)
 
-        self.label_valeur = QLabel(str(self.valeur))
+        self.label_valeur = QLabel(str(self.value))
         self.label_valeur.setAlignment(Qt.AlignCenter)
         self.label_valeur.setFixedWidth(50)
         self.label_valeur.setObjectName("ValueBox")
 
         self.btn_val_plus = QPushButton("+")
         self.btn_val_plus.setFixedWidth(40)
-        self.btn_val_plus.clicked.connect(self._increment_valeur)
+        self.btn_val_plus.clicked.connect(self._increment_value)
 
         row_val.addWidget(label_val)
         row_val.addWidget(self.btn_val_minus)
@@ -186,7 +186,7 @@ class ActionPanel(QFrame):
 # Action selection
     def _uncheck_actions(self):
         """Deselect all action buttons"""
-        for b in (self.btn_valeur, self.btn_dodo, self.btn_tout_pile):
+        for b in (self.btn_value, self.btn_dodo, self.btn_tout_pile):
             b.blockSignals(True)
             b.setChecked(False)
             b.blockSignals(False)
@@ -195,7 +195,7 @@ class ActionPanel(QFrame):
         """Select 'bet' action and show bet input"""
         self._selected_action = "bet"
         self._uncheck_actions()
-        self.btn_valeur.setChecked(True)
+        self.btn_value.setChecked(True)
         self.bet_widget.setVisible(True)
 
     def select_dodo(self):
@@ -215,7 +215,7 @@ class ActionPanel(QFrame):
     def get_selected_action(self):
         """Return the currently selected action and the bet values"""
         if self._selected_action == "bet":
-            return "bet", (self.nb, self.valeur)
+            return "bet", (self.quantity, self.value)
         if self._selected_action in ("dodo", "tout_pile"):
             return self._selected_action, None
         return None, None
@@ -263,31 +263,31 @@ class ActionPanel(QFrame):
 # +/- controls
     def _increment_nb(self):
         """Increase the number input, maximum 30"""
-        if self.nb < 30:
-            self.nb += 1
-            self.label_nb.setText(str(self.nb))
+        if self.quantity < 30:
+            self.quantity += 1
+            self.label_nb.setText(str(self.quantity))
 
     def _decrement_nb(self):
         """Decrease the number input, minimum 1"""
-        if self.nb > 1:
-            self.nb -= 1
-            self.label_nb.setText(str(self.nb))
+        if self.quantity > 1:
+            self.quantity -= 1
+            self.label_nb.setText(str(self.quantity))
 
-    def _increment_valeur(self):
+    def _increment_value(self):
         """Increase the value input, maximum 6"""
-        if self.valeur < 6:
-            self.valeur += 1
-            self.label_valeur.setText(str(self.valeur))
+        if self.value < 6:
+            self.value += 1
+            self.label_valeur.setText(str(self.value))
 
-    def _decrement_valeur(self):
+    def _decrement_value(self):
         """Decrease the value input, minimum 1"""
-        if self.valeur > 1:
-            self.valeur -= 1
-            self.label_valeur.setText(str(self.valeur))
+        if self.value > 1:
+            self.value -= 1
+            self.label_valeur.setText(str(self.value))
 
     def reset_values(self):
         """Reset both number and value inputs to defaults"""
-        self.nb = 1
-        self.valeur = 1
-        self.label_nb.setText(str(self.nb))
-        self.label_valeur.setText(str(self.valeur))
+        self.quantity = 1
+        self.value = 1
+        self.label_nb.setText(str(self.quantity))
+        self.label_valeur.setText(str(self.value))
