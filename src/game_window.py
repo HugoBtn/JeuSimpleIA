@@ -17,7 +17,6 @@ except Exception:
 class GameWindow(QMainWindow):
     """Main window for Perudo game"""
 
-# Constructor
     def __init__(self, players: list[Player] | None = None, auto_start_rounds: bool = True):
         super().__init__()
 
@@ -94,16 +93,16 @@ class GameWindow(QMainWindow):
         name = player.get_name()
 
         if bet == "dodo":
-            self._handle_dodo(name)
+            self._handle_action(name, "dodo", self.game.resolve_dodo)
             return
         if bet == "tout_pile":
-            self._handle_tout_pile(name)
+            self._handle_action(name, "tout pile", self.game.resolve_tout_pile)
             return
         if isinstance(bet, Bet):
             self._handle_bet((bet.get_quantity(), bet.get_value()), name)
             return
 
-        self._handle_dodo(name)
+        self._handle_action(name, "dodo", self.game.resolve_dodo)
 
     def _setup_ui(self):
         """Build the interface"""
@@ -226,8 +225,6 @@ class GameWindow(QMainWindow):
 # Round
     def start_round(self):
         """Start a new round: roll dice and update UI"""
-        self.auto_start_rounds = True
-
         self.game.start_new_round()
         self.round_started = True
 
@@ -296,9 +293,9 @@ class GameWindow(QMainWindow):
         if action == "bet":
             self._handle_bet(bet_values, name)
         elif action == "dodo":
-            self._handle_dodo(name)
+            self._handle_action(name, "dodo", self.game.resolve_dodo)
         elif action == "tout_pile":
-            self._handle_tout_pile(name)
+            self._handle_action(name, "tout pile", self.game.resolve_tout_pile)
 
     def _handle_bet(self, bet_values, name):
         """Process a bet action, validate it, update game state and UI."""
@@ -364,27 +361,19 @@ class GameWindow(QMainWindow):
             QMessageBox.information(self,"Partie terminée",f" {winner_name} remporte la partie!")
             self.action_panel.setEnabled(False)
             self.btn_start_round.setEnabled(False)
+            self.auto_start_rounds = False
             return
 
-            self.auto_start_rounds = False
-
-            # Prepare next round
-            QTimer.singleShot(4000, self._hide_all_dice)
-            QTimer.singleShot(4000, lambda: self.btn_start_round.setEnabled(True))
-
-        # Prepare next round
         self.active_player = self.game.get_current_player_index()
         self.action_panel.set_player(self.players[self.active_player])
         self.round_started = False
-        self._hide_all_dice()
 
-    def _handle_dodo(self, name):
-        """Handle 'Dodo' action"""
-        self._handle_action(name=name, call_name="dodo", resolve_function=self.game.resolve_dodo)
-
-    def _handle_tout_pile(self, name):
-        """Handle 'Tout pile' action"""
-        self._handle_action(name=name,call_name="tout pile",resolve_function=self.game.resolve_tout_pile)
+        if self.auto_start_rounds:
+            QTimer.singleShot(4000, self._hide_all_dice)
+            QTimer.singleShot(4000, self.start_round)
+        else:
+            self._hide_all_dice()
+            self.btn_start_round.setEnabled(True)
 
     def _update_player_zones(self):
         """Update all player zones with their current dice"""
