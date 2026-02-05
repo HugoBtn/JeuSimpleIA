@@ -39,7 +39,7 @@ pip install -r requirements.txt
 Dans le dossier du projet, exécutez:
 
 ```bash
-python main.py
+python src/main.py
 ```
 
 Le jeu s'ouvrira dans une fenêtre graphique.

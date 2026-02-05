@@ -267,7 +267,8 @@ class GameWindow(QMainWindow):
 
             # Add palepico warning if in palepico mode
             palepico_warning = "  [PALEPICO MODE]" if self.game.is_palepico_mode() else ""
-            self.current_bet_label.setText(f"Pari actuel : {current_bet.get_quantity()} × {value_text}{palepico_warning}")
+            self.current_bet_label.setText(
+                f"Pari actuel : {current_bet.get_quantity()} × {value_text}{palepico_warning}")
 
     def on_validate_action(self):
         """Handle validation of the selected action from the action panel"""
@@ -316,8 +317,8 @@ class GameWindow(QMainWindow):
 
             # Prepare for the next player
             self.action_panel.reset_action()
-            self.game.next_betting_player() # Update game's betting player index
-            self.next_player() # Move to next player in UI
+            self.game.next_betting_player()  # Update game's betting player index
+            self.next_player()  # Move to next player in UI
         else:
             # Invalid bet : error message
             if current_bet is None:
@@ -341,8 +342,17 @@ class GameWindow(QMainWindow):
 
         # Reveal dice
         self._show_all_dice()
+        self.info_label.setText(f" {name} a appelé {call_name.upper()}! Révélation des dés...")
         QApplication.processEvents()
 
+        # Disable action panel during resolution
+        self.action_panel.setEnabled(False)
+
+        # Wait 5 seconds to let players see the dice then call complete_resolution
+        QTimer.singleShot(5000, lambda: self._complete_resolution(name, call_name, resolve_function))
+
+    def _complete_resolution(self, name, call_name, resolve_function):
+        """Complete the resolution after the dice reveal pause"""
         # Resolve call (Dodo or Tout pile)
         result = resolve_function()
 
@@ -355,7 +365,7 @@ class GameWindow(QMainWindow):
         # End game
         if result["game_over"]:
             winner_name = result["winner"].get_name()
-            QMessageBox.information(self,"Partie terminée",f" {winner_name} remporte la partie!")
+            QMessageBox.information(self, "Partie terminée", f" {winner_name} remporte la partie!")
             self.action_panel.setEnabled(False)
             self.btn_start_round.setEnabled(False)
             self.auto_start_rounds = False
@@ -363,6 +373,7 @@ class GameWindow(QMainWindow):
 
         self.active_player = self.game.get_current_player_index()
         self.action_panel.set_player(self.players[self.active_player])
+        self.action_panel.setEnabled(not self._is_bot(self.players[self.active_player]))
         self.round_started = False
 
         if self.auto_start_rounds:
