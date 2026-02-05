@@ -5,7 +5,6 @@ from PySide6.QtCore import Qt
 class DiceWidget(QWidget):
     """Widget that draws a dice"""
 
-# Constructor
     def __init__(self, dice_value=1, color="white"):
         super().__init__()
         self.dice_value = dice_value

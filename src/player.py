@@ -6,7 +6,6 @@ from dice import Dice
 class Player:
     """Represents a player in the Perudo game"""
 
-# Constructor
     def __init__(self, name, color):
         self.__name = name
         self.__color = color
@@ -14,7 +13,6 @@ class Player:
         self.bet = None
         self.__palepico = False
 
-# Getters
     def get_name(self):
         """Return the player's name"""
         return self.__name
@@ -31,7 +29,6 @@ class Player:
         """Get number of dice remaining"""
         return len(self.__goblet.get_content())
 
-# Game actions
     def play(self):
         """Roll all dice in the goblet"""
         self.__goblet.shake()
@@ -52,13 +49,10 @@ class Player:
         if self.__palepico and len(self.__goblet.get_content())> 1:
             self.__palepico = False
 
-
-# Game state
     def palepico(self):
         """Check if player is in palepico mode (1 die left)"""
         return self.__palepico
 
-# Console version
     def make_bet(self):
         """Ask a player to make a bet, used in the console version"""
         bet = input(f"{self.__name}, enter your bet (dodo or (amount, value)): ")

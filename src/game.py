@@ -5,7 +5,6 @@ from bet import Bet
 class Game:
     """Core game logic for Perudo."""
 
-# Constructor
     def __init__(self, players: list[Player]):
         self.__players = players
         self.__current_betting_player_index = 0
@@ -26,7 +25,6 @@ class Game:
     def __normalize_current_player_index(self):
         self.__current_betting_player_index = self.__find_next_alive_index(self.__current_betting_player_index)
 
-# Getters
     def get_current_player_index(self):
         """Return the index of the current betting player"""
         """Get the index of the current betting player"""
@@ -49,7 +47,6 @@ class Game:
         """Return the list of players"""
         return self.__players
 
-# Game state
     def is_palepico_mode(self):
         """Check if the fame is in Palepico mode"""
         return any(p.palepico() for p in self.__players)
@@ -58,7 +55,6 @@ class Game:
         """Check if a round is currently active"""
         return self.__round_active
 
-# Round
     def start_new_round(self):
         """Start a new round - roll dice for all players"""
         self.__round_active = True
@@ -81,7 +77,6 @@ class Game:
 
         return game_over, winner
 
-    # Betting logic
     def set_current_bet(self, bet):
         """Set the current bet"""
         self.__current_bet = bet
@@ -110,7 +105,6 @@ class Game:
 
         return count
 
-# Resolution
     def _no_active_bet_result(self):
         """Return dictionnary when no bet is active"""
         return {
@@ -207,7 +201,6 @@ class Game:
             "winner": winner
         }
 
-# Game loop
     def game_loop(self):
         while True:
             print("Rolling dice for all players...")
@@ -249,10 +242,3 @@ class Game:
             print("\n" + "=" * 50)
             print("Starting new round!")
             print("=" * 50 + "\n")
-
-
-if __name__ == "__main__":
-    # Example usage with two players
-    players = [Player("Alice", "purple"), Player("Bob", "red")]
-    game = Game(players)
-    game.game_loop()
