@@ -6,12 +6,11 @@ from bot_player import BotPlayer
 from game_window import GameWindow
 from player import Player
 
-
 def main():
     human = Player("Toi", "purple")
     bots = [
         BotPlayer("Bot Rouge", "red", risk=0.55),
-        BotPlayer("Bot Bleu", "blue", risk=0.60),
+        BotPlayer("Bot Bleu", "blue", risk=0.90),
     ]
 
     app = QApplication(sys.argv)
