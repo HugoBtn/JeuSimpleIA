@@ -9,8 +9,8 @@ from player import Player
 def main():
     human = Player("Toi", "purple")
     bots = [
-        BotPlayer("Bot Rouge", "red", risk=0.55),
-        BotPlayer("Bot Bleu", "blue", risk=0.90),
+        BotPlayer("Bot Rouge", "red", risk=1),
+        BotPlayer("Bot Bleu", "blue", risk=1),
     ]
 
     app = QApplication(sys.argv)
