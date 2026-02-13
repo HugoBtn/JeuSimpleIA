@@ -3,13 +3,11 @@ from dice import Dice
 class Goblet:
     """Represents a goblet with a set of dice"""
 
-# Constructor
     def __init__(self, color, initial_dice = 5):
         self.__color = color
         self.__size = 6
         self.__content = [Dice(color) for _ in range(initial_dice)]
 
-# Getters
     def get_color(self):
         """Return the goblet color"""
         return self.__color
@@ -22,7 +20,6 @@ class Goblet:
         """Return a copy of the dice list"""
         return self.__content.copy()
 
-# Dice management
     def add_dice(self, dice: Dice):
         """Add a dice to the goblet if there is space"""
         if len(self.__content) < self.__size:   
