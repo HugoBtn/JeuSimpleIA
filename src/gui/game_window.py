@@ -16,7 +16,6 @@ except Exception:
 class GameWindow(QMainWindow):
     """Main window for Perudo game"""
 
-# Constructor
     def __init__(self, players: list[Player] | None = None, auto_start_rounds: bool = True):
         super().__init__()
 
@@ -204,7 +203,6 @@ class GameWindow(QMainWindow):
 
         return widget
 
-# Dice
     def _hide_all_dice(self):
         """Hide dice for all players"""
         for zone in self.player_zones:
@@ -222,7 +220,7 @@ class GameWindow(QMainWindow):
         """Reveal all dice at the end of a round"""
         for zone in self.player_zones:
             zone.show_dice()
-# Round
+
     def start_round(self):
         """Start a new round: roll dice and update UI"""
         self.game.start_new_round()
@@ -271,7 +269,6 @@ class GameWindow(QMainWindow):
             palepico_warning = "  [PALEPICO MODE]" if self.game.is_palepico_mode() else ""
             self.current_bet_label.setText(f"Pari actuel : {current_bet.get_quantity()} × {value_text}{palepico_warning}")
 
-# Actions
     def on_validate_action(self):
         """Handle validation of the selected action from the action panel"""
         if not self.round_started:
@@ -383,7 +380,6 @@ class GameWindow(QMainWindow):
         """Update all player zones with their current dice"""
         for zone in self.player_zones:
             zone.update_dice_count()
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
