@@ -1,8 +1,8 @@
 import random
 import json
 import os
-from bot_player import BotPlayer  # On hérite du BotPlayer, pas du Player simple
-from bet import Bet
+from .bot_player import BotPlayer  # On hérite du BotPlayer, pas du Player simple
+from .bet import Bet
 
 class QLearningBot(BotPlayer): # <--- Changement ici : On devient un BotPlayer
     def __init__(self, name, color, q_table_file="brain.json", epsilon=0.0):

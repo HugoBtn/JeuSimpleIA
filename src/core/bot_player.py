@@ -1,7 +1,7 @@
 import random
 from typing import Optional, Tuple, Union
-from player import Player
-from bet import Bet as BetObject
+from .player import Player
+from .bet import Bet as BetObject
 
 Bet = Union[str, Tuple[int, int]]
 

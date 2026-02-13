@@ -1,5 +1,5 @@
-from player import Player
-from bet import Bet
+from .player import Player
+from .bet import Bet
 
 
 class Game:

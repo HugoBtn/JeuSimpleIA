@@ -1,11 +1,10 @@
 import sys
 from PySide6.QtWidgets import QApplication
 
-from bot_player import BotPlayer
-from game_window import GameWindow
-from player import Player
-# Assure-toi que le fichier q_learning_bot.py existe bien dans src/
-from q_learning_bot import QLearningBot 
+from core.bot_player import BotPlayer
+from gui.game_window import GameWindow
+from core.player import Player
+from core.q_learning_bot import QLearningBot 
 
 def main():
     # Toi (L'humain)
@@ -17,7 +16,7 @@ def main():
         QLearningBot("Super IA", "red", epsilon=0),
         
         # --- Un Bot Classique (pour comparer) ---
-        BotPlayer("Bot Bleu", "blue", risk=0.60),
+        BotPlayer("Bot Bleu", "blue", risk=0.60)
     ]
 
     app = QApplication(sys.argv)

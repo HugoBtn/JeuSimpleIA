@@ -6,10 +6,10 @@ import os
 import numpy as np # Si pas installé : pip install numpy
 
 # Imports du projet
-from game import Game
-from q_learning_bot import QLearningBot
-from bot_player import BotPlayer
-from bet import Bet
+from core.game import Game
+from core.q_learning_bot import QLearningBot
+from core.bot_player import BotPlayer
+from core.bet import Bet
 
 def train(n_episodes=1000):
     print(f"--- 📊 Démarrage de l'entraînement analytique ({n_episodes} parties) ---")
