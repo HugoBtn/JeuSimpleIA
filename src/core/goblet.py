@@ -1,4 +1,4 @@
-from dice import Dice
+from .dice import Dice
 
 class Goblet:
     """Represents a goblet with a set of dice"""

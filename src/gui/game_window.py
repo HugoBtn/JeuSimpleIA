@@ -1,15 +1,14 @@
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget,
-                               QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox)
 from PySide6.QtCore import Qt, QTimer
-from player_zone import PlayerZone
-from player import Player
-from action_panel import ActionPanel
-from bet import Bet
-from game import Game
+from .player_zone import PlayerZone
+from core.player import Player
+from .action_panel import ActionPanel
+from core.bet import Bet
+from core.game import Game
 import sys
 
 try:
-    from bot_player import BotPlayer
+    from core.bot_player import BotPlayer
 except Exception:
     BotPlayer = None
 

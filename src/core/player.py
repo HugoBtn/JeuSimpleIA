@@ -1,6 +1,6 @@
-from goblet import Goblet
-from bet import Bet
-from dice import Dice
+from .goblet import Goblet
+from .bet import Bet
+from .dice import Dice
 
 
 class Player:

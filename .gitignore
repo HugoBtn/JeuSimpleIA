@@ -1,24 +1,8 @@
-# PyCharm
-.idea/
-*.iml
-
-# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
+*.pyc
 .venv/
-*.egg-info/
-dist/
-build/
-
-# OS
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-
-venv
+.idea/
+.vscode/
+brain.json
+q_table.json
+*.log

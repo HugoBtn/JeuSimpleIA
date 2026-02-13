@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt
-from dice_widget import DiceWidget
+from .dice_widget import DiceWidget
 
 
 class PlayerZone(QWidget):
