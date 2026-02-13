@@ -4,8 +4,6 @@ from PySide6.QtCore import Qt
 
 class ActionPanel(QFrame):
     """Action panel for a player (right side panel)"""
-
-# Constructor
     def __init__(self, player):
         super().__init__()
         self.setFrameShape(QFrame.StyledPanel)
@@ -183,7 +181,6 @@ class ActionPanel(QFrame):
             QPushButton[text="Valider"]:hover { background-color: #2C3E50; }
         """)
 
-# Action selection
     def _uncheck_actions(self):
         """Deselect all action buttons"""
         for b in (self.btn_valeur, self.btn_dodo, self.btn_tout_pile):
@@ -220,7 +217,6 @@ class ActionPanel(QFrame):
             return self._selected_action, None
         return None, None
 
-# Player updates
     def set_player(self, player):
         """Update the panel to the current active player"""
         self.player = player
@@ -260,7 +256,6 @@ class ActionPanel(QFrame):
 
         self.player_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2C3E50;")
 
-# +/- controls
     def _increment_nb(self):
         """Increase the number input, maximum 30"""
         if self.nb < 30:
