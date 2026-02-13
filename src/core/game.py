@@ -145,12 +145,12 @@ class Game:
             loser.lost()
             self.__current_betting_player_index = last_bettor_index
             self.__normalize_current_player_index()
-            message = f"{loser.get_name()} loses! There were {count} dice instead of {expected_count}"
+            message = f"{loser.get_name()} perd ! Il y avait {count} dé(s) au lieu de {expected_count}"
         else:
             loser = dodo_caller
             loser.lost()
             self.__normalize_current_player_index()
-            message = f"{loser.get_name()} loses! There were {count} dice, the bet was correct!"
+            message = f"{loser.get_name()} perd! Il y avait {count} dé(s), le pari était correct!"
 
         game_over, winner = self.end_round()
 
@@ -187,13 +187,13 @@ class Game:
             tout_pile_caller.won()
             self.__current_betting_player_index = tout_pile_caller_index
             self.__normalize_current_player_index()
-            message = (f"Spot-on! Exactly {count} dice. {tout_pile_caller.get_name()} wins a die!")
+            message = (f"Parfait ! Exactement  {count} dé(s). {tout_pile_caller.get_name()} gagne un dé!")
             loser = None
         else:
             loser = tout_pile_caller
             loser.lost()
             self.__normalize_current_player_index()
-            message = (f"Spot-on failed! There were {count} dice instead of {expected_count}. {tout_pile_caller.get_name()} loses!")
+            message = (f"Échec de la tentative ! Il y avait {count} dé(s) au lieu de {expected_count}. {tout_pile_caller.get_name()} perd!")
 
         game_over, winner = self.end_round()
 
