@@ -28,14 +28,14 @@ class Goblet:
         if len(self.__content) < self.__size:   
             self.__content.append(dice)
         else:
-            print("Le gobelet est plein.")
+            print("The goblet is full.")
     
     def remove_dice(self):
         """Remove a dice from the goblet"""
         if len(self.__content) > 0:
             self.__content.pop()
         else:
-            print("Le gobelet est vide.")
+            print("The goblet is empty.")
     
     def shake(self):
         """Roll all dice in the goblet"""
@@ -47,7 +47,7 @@ class Goblet:
         return sum(1 for dice in self.__content if dice.get_value() == value)
 
     def __str__(self):
-        return f"Gobelet de couleur {self.__color} avec {len(self.__content)} dés: {str(self.__content)}"
+        return f"Goblet of color {self.__color} with {len(self.__content)} dice: {str(self.__content)}"
     
     def __repr__(self):
         return self.__content

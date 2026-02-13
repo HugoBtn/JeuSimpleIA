@@ -1,5 +1,5 @@
 class Bet:
-    """Represents a bet in the Perudp game"""
+    """Represents a bet in the Perudo game"""
 
 #Constructor
     def __init__(self, quantity, value):
@@ -12,7 +12,7 @@ class Bet:
         return self.__quantity
 
     def get_value(self):
-        """Retirn the dice value of the bet"""
+        """Return the dice value of the bet"""
         return self.__value
 
 # Validation
@@ -80,14 +80,14 @@ class Bet:
 
 if __name__ == "__main__":
     # Tests
-    bid1 = Bet(3, 4)  # "3 dés de valeur 4"
+    bid1 = Bet(3, 4)  # "3 dice of value 4"
     print(bid1)
 
-    bid2 = Bet(4, 4)  # "4 dés de valeur 4" - valid raise
+    bid2 = Bet(4, 4)  # "4 dice of value 4" - valid raise
     print(f"{bid2} is valid raise over {bid1}? {bid2.is_valid_raise(bid1)}")
 
-    bid3 = Bet(3, 5)  # "3 dés de valeur 5" - valid raise (same qty, higher value)
+    bid3 = Bet(3, 5)  # "3 dice of value 5" - valid raise (same qty, higher value)
     print(f"{bid3} is valid raise over {bid1}? {bid3.is_valid_raise(bid1)}")
 
-    bid4 = Bet(3, 3)  # "2 dés de valeur 6" - INVALID (lower quantity)
+    bid4 = Bet(3, 3)  # "2 dice of value 6" - INVALID (lower quantity)
     print(f"{bid4} is valid raise over {bid1}? {bid4.is_valid_raise(bid1)}")

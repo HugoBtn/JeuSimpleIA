@@ -29,7 +29,6 @@ class Game:
 # Getters
     def get_current_player_index(self):
         """Return the index of the current betting player"""
-        """Get the index of the current betting player"""
         self.__normalize_current_player_index()
         return self.__current_betting_player_index
 
@@ -38,7 +37,7 @@ class Game:
         return self.__current_bet
 
     def get_all_dice_values(self):
-        """Return a dictionnary with all dice values"""
+        """Return a dictionary with all dice values"""
         result = {}
         for player in self.__players:
             dice_list = player.get_goblet().get_content()
@@ -51,7 +50,7 @@ class Game:
 
 # Game state
     def is_palepico_mode(self):
-        """Check if the fame is in Palepico mode"""
+        """Check if the game is in Palepico mode"""
         return any(p.palepico() for p in self.__players)
 
     def is_round_active(self):
@@ -117,7 +116,7 @@ class Game:
             "loser": None,
             "count": 0,
             "expected": 0,
-            "message": "Aucun pari actif!",
+            "message": "No active bet!",
             "game_over": False,
             "winner": None
         }
@@ -146,12 +145,12 @@ class Game:
             loser.lost()
             self.__current_betting_player_index = last_bettor_index
             self.__normalize_current_player_index()
-            message = f"{loser.get_name()} perd! Il y avait {count} dé(s) au lieu de {expected_count}"
+            message = f"{loser.get_name()} loses! There were {count} dice instead of {expected_count}"
         else:
             loser = dodo_caller
             loser.lost()
             self.__normalize_current_player_index()
-            message = f"{loser.get_name()} perd! Il y avait {count} dé(s), le pari était juste!"
+            message = f"{loser.get_name()} loses! There were {count} dice, the bet was correct!"
 
         game_over, winner = self.end_round()
 
@@ -188,13 +187,13 @@ class Game:
             tout_pile_caller.won()
             self.__current_betting_player_index = tout_pile_caller_index
             self.__normalize_current_player_index()
-            message = (f"Tout pile réussi ! Exactement {count} dé(s). {tout_pile_caller.get_name()} gagne un dé !")
+            message = (f"Spot-on! Exactly {count} dice. {tout_pile_caller.get_name()} wins a die!")
             loser = None
         else:
             loser = tout_pile_caller
             loser.lost()
             self.__normalize_current_player_index()
-            message = (f"Tout pile raté ! Il y avait {count} dé(s) au lieu de {expected_count}. {tout_pile_caller.get_name()} perd !")
+            message = (f"Spot-on failed! There were {count} dice instead of {expected_count}. {tout_pile_caller.get_name()} loses!")
 
         game_over, winner = self.end_round()
 

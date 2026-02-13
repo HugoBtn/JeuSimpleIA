@@ -26,10 +26,10 @@ class Dice:
         return self.__value
 
     def __str__(self):
-        return f"La valeur du dé de couleur {self.__color} est {str(self.__value)}"
+        return f"The value of the {self.__color} die is {str(self.__value)}"
 
     def __repr__(self):
-        return f"Dé({self.__value})"
+        return f"Dice({self.__value})"
 
 
 if __name__ == "__main__":

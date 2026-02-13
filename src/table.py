@@ -15,7 +15,7 @@ class Table:
 
     def remove_player(self, player):
         if player in self.__players:
-            print(f"💀 {player} n'a plus de dés et est éliminé !")
+            print(f"💀 {player} has no dice left and is eliminated!")
             idx = self.__players.index(player)
             self.__players.remove(player)
             if idx <= self.__current_idx and self.__current_idx > 0:
